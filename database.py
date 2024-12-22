@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import threading
 import time
 import schedule
-
+import json
 
 def adapt_datetime(dt):
     return dt.isoformat()
@@ -61,7 +61,7 @@ def cleanup_database():
 
 
 def run_scheduler():
-    schedule.every(1).minutes.do(cleanup_database)
+    schedule.every(10).minutes.do(cleanup_database)
     while True:
         schedule.run_pending()
         time.sleep(1)
@@ -78,4 +78,4 @@ def fetch_all_events():
     cursor.execute("SELECT * FROM EVENTS")
     output = cursor.fetchall()
     connection.close()
-    return output
+    return json.dumps(output, default=str)
