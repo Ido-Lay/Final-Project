@@ -4,6 +4,7 @@ import threading
 import time
 import schedule
 import json
+from class_events import Event
 
 def adapt_datetime(dt):
     return dt.isoformat()
@@ -32,7 +33,7 @@ def make_database():
     connection.close()
 
 
-def insert_event(event_name, long, lat, region, city, risk):
+def insert_event(event):
     connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
     cursor = connection.cursor()
 
@@ -40,7 +41,7 @@ def insert_event(event_name, long, lat, region, city, risk):
     cursor.execute("""
         INSERT INTO EVENTS (event_name, long, lat, region, city, risk, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (event_name, long, lat, region, city, risk, datetime.now()))
+    """, (event.event_name, event.long, event.lat, event.region, event.city, event.risk, datetime.now()))
 
     connection.commit()
     connection.close()

@@ -5,6 +5,8 @@ import time
 import schedule
 import database
 import socket
+import json
+from class_events import Event
 
 HOST = "127.0.0.1"
 PORT = 888
@@ -14,7 +16,6 @@ if __name__ == '__main__':
     sqlite3.register_converter("DATETIME", database.convert_datetime)
     database.make_database()
     database.start_cleanup_thread()
-    database.insert_event("Fire", 100, 2300, "Mishor Hahof", "Hadera", 2)
     count = 0
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
@@ -26,8 +27,9 @@ if __name__ == '__main__':
                 data = conn.recv(4096)
                 if not data:
                     break
-                if data == b"fetch all markers":
-                    output = database.fetch_all_events()
-                    conn.send(output.encode())
+                if data:
+                    event_data = json.loads(data.decode())
+                    event = Event.from_dict(event_data)
+                    database.insert_event(event)
                 elif data == b"close":
                     conn.close()
