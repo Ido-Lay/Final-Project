@@ -17,6 +17,8 @@ class Event:
             "risk": self.risk,
         }
 
+    def print_event(self):
+        print(self.event_name, ", ", self.long, ", ", self.lat, ", ", self.region, ", ", self.city, ", ", self.risk)
     @staticmethod
     def from_dict(data):
         return Event(

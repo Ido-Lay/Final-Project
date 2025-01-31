@@ -80,3 +80,4 @@ def fetch_all_events():
     output = cursor.fetchall()
     connection.close()
     return json.dumps(output, default=str)
+
