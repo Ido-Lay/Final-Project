@@ -5,6 +5,7 @@ import time
 import schedule
 import json
 from class_events import Event
+import Utils
 
 def adapt_datetime(dt):
     return dt.isoformat()
@@ -33,7 +34,7 @@ def make_database():
     connection.close()
 
 
-def insert_event(event):
+'''def insert_event(event):
     connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
     cursor = connection.cursor()
 
@@ -44,7 +45,19 @@ def insert_event(event):
     """, (event.event_name, event.long, event.lat, event.region, event.city, event.risk, datetime.now()))
 
     connection.commit()
+    connection.close()'''
+
+def insert_event(event):
+    connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
+    cursor = connection.cursor()
+    new_event = Utils.get_location_info(event)
+    cursor.execute("""
+            INSERT INTO EVENTS (event_name, long, lat, region, city, risk, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (new_event.event_name, new_event.long, new_event.lat, new_event.region, new_event.city, new_event.risk, datetime.now()))
+    connection.commit()
     connection.close()
+
 
 
 def cleanup_database():

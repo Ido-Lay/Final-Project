@@ -1,5 +1,5 @@
 class Event:
-    def __init__(self, event_name, long, lat, region, city, risk):
+    def __init__(self, event_name, long, lat, risk, region="", city=""):
         self.event_name = event_name
         self.long = long
         self.lat = lat
@@ -12,9 +12,9 @@ class Event:
             "event_name": self.event_name,
             "long": self.long,
             "lat": self.lat,
+            "risk": self.risk,
             "region": self.region,
             "city": self.city,
-            "risk": self.risk,
         }
 
     def print_event(self):
@@ -25,7 +25,7 @@ class Event:
             event_name=data["event_name"],
             long=data["long"],
             lat=data["lat"],
+            risk=data["risk"],
             region=data["region"],
             city=data["city"],
-            risk=data["risk"],
         )
