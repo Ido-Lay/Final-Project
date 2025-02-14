@@ -3,9 +3,10 @@ class Event:
         self.event_name = event_name
         self.long = long
         self.lat = lat
+        self.risk = risk
         self.region = region
         self.city = city
-        self.risk = risk
+
 
     def to_dict(self):
         return {

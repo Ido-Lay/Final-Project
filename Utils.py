@@ -10,10 +10,15 @@ def get_location_info(event):
 
     if location and 'address' in location.raw:
         address = location.raw['address']
-        new_event = Event(event.event_name, event.long, event.lat,
-                      address.get('state', ''),
-                      address.get('city', ''), event.risk)
+        region = address.get('state', '')  # The state (region)
+        city = address.get('city', '')  # The city
+
+        # Ensure correct order of parameters in the Event constructor
+        new_event = Event(event.event_name, event.long, event.lat, event.risk, region, city)
         return new_event
-    return None
+
+    print(f"Warning: Could not fetch location info for event {event.event_name}")
+    return event
+
 
 

@@ -22,11 +22,11 @@ def make_database():
     table = """ CREATE TABLE EVENTS (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 event_name TEXT,
-                long INT,
-                lat INT,
+                long REAL,
+                lat REAL,
+                risk INT,
                 region TEXT,
                 city TEXT,
-                risk INT,
                 created_at DATETIME
             ); """
     cursor.execute(table)
@@ -51,13 +51,20 @@ def insert_event(event):
     connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
     cursor = connection.cursor()
     new_event = Utils.get_location_info(event)
+
+    if new_event is None:
+        print(f"Warning: Could not fetch location info for event {event.event_name}")
+        return
+
+    # Debugging: Print the data before insertion
+    print(f"Inserting event: {new_event.event_name}, {new_event.long}, {new_event.lat}, {new_event.risk}, {new_event.region}, {new_event.city}")
+
     cursor.execute("""
-            INSERT INTO EVENTS (event_name, long, lat, region, city, risk, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (new_event.event_name, new_event.long, new_event.lat, new_event.region, new_event.city, new_event.risk, datetime.now()))
+        INSERT INTO EVENTS (event_name, long, lat, risk, region, city, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (new_event.event_name, new_event.long, new_event.lat, new_event.risk, new_event.region, new_event.city, datetime.now()))
     connection.commit()
     connection.close()
-
 
 
 def cleanup_database():
