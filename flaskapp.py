@@ -62,7 +62,7 @@ def add_marker():
 
 @app.route("/")
 def map_with_markers():
-    m = folium.Map(location=[32.0, 35.0], zoom_start=8)  # Adjust center and zoom level as needed
+    m = folium.Map(location=[32.0, 35.0], zoom_start=8, world_copy_jump=True)  # Adjust center and zoom level as needed
     events = fetch_all_coordinates()
     add_all_markers_to_ui(events, m)
     return m._repr_html_()
