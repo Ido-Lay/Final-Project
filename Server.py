@@ -30,6 +30,14 @@ if __name__ == '__main__':
                 if data:
                     event_data = json.loads(data.decode())
                     event = Event.from_dict(event_data)
-                    database.insert_event(event)
+                    if event.risk > 0 and event.risk < 3:
+                        database.insert_event(event)
+                    elif event.risk == 0:
+                        AdminHost = "127.0.0.1"
+                        AdminPort = 6000
+                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                            s.connect((AdminHost, AdminPort))
+                            event_data = json.dumps(event.to_dict()).encode()
+                            s.sendall(event_data)
                 elif data == b"close":
                     conn.close()

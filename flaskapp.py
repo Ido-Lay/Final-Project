@@ -1,5 +1,6 @@
 import http
-
+import socket
+import json
 from flask import Flask, render_template_string, request
 import folium
 import sqlite3
@@ -46,18 +47,34 @@ def add_all_markers_to_ui(events, m):
             ).add_to(m)
 
 
-'''@app.route("/api/all_markers")
+@app.route("/api/all_markers")
 def get_all_markers():
     all_markers = fetch_all_coordinates()
     serialized_markers = [marker.to_dict() for marker in all_markers]
-    return serialized_markers'''
-'''
-@app.route("/api/add_marker", methods=['POST'])
-def add_marker():
+    return serialized_markers
+
+"""
+def send_marker():
     json_data = request.json
     event = Event.from_dict(json_data)
+    return 'Sent successfully'"""
 
-    return 'Added successfully'''''
+@app.route("/api/send_marker", methods=['POST'])
+def send_marker():
+    json_data = request.json
+    event = Event.from_dict(json_data)
+    event_data = json.dumps(event.to_dict())
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect(('127.0.0.1', 888))
+        sock.sendall(event_data.encode('utf-8'))
+    except Exception as e:
+        print(f"Error sending data: {e}")
+
+    finally:
+        sock.close()
+
+    return 'Sent successfully'
 
 
 @app.route("/")
