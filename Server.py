@@ -11,6 +11,8 @@ from class_events import Event
 HOST = "127.0.0.1"
 PORT = 888
 
+
+
 if __name__ == '__main__':
     sqlite3.register_adapter(datetime, database.adapt_datetime)
     sqlite3.register_converter("DATETIME", database.convert_datetime)
