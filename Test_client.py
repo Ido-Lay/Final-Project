@@ -2,7 +2,7 @@ import socket
 import json
 import time
 
-from class_events import Event
+from EventClass import Event
 import random
 HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 888  # The port used by the server

@@ -1,5 +1,5 @@
 from geopy.geocoders import Nominatim
-from class_events import Event
+from EventClass import Event
 
 
 def get_location_info(event):

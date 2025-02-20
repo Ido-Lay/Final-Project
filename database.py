@@ -4,7 +4,7 @@ import threading
 import time
 import schedule
 import json
-from class_events import Event
+from EventClass import Event
 import Utils
 
 class DataBaseActions():
@@ -18,7 +18,7 @@ class DataBaseActions():
         connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
         cursor.execute("DROP TABLE IF EXISTS EVENTS")
-        table = """ CREATE TABLE EVENTS (
+        event_table = """ CREATE TABLE EVENTS (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_name TEXT,
                     long REAL,
@@ -28,7 +28,18 @@ class DataBaseActions():
                     city TEXT,
                     created_at DATETIME
                 ); """
-        cursor.execute(table)
+        cursor.execute(event_table)
+
+        user_table = """ CREATE TABLE IF NOT EXISTS USERS (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        mail_address TEXT UNIQUE,
+                        password_hash TEXT NOT NULL,
+                        home_long REAL,
+                        home_lat REAL
+                    ); """
+        cursor.execute(user_table)
+
         connection.commit()
         connection.close()
 
@@ -110,5 +121,3 @@ class DataBaseActions():
             events.append(e)
 
         return events
-
-

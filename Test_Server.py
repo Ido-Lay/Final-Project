@@ -6,7 +6,7 @@ import schedule
 import database
 import socket
 import json
-from class_events import Event
+from EventClass import Event
 
 HOST = "127.0.0.1"
 PORT = 888
