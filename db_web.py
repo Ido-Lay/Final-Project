@@ -59,20 +59,20 @@ class DataBaseActions():
     def insert_event(self, event):
         connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
-        new_event = Utils.get_location_info(event)
+        region_and_city = Utils.get_location_info(event)
 
-        if new_event is None:
+        if event.region and event.city is None:
             print(f"Warning: Could not fetch location info for event {event.event_name}")
             return
 
         # Debugging: Print the data before insertion
         print(
-            f"Inserting event: {new_event.event_name}, {new_event.long}, {new_event.lat}, {new_event.risk}, {new_event.region}, {new_event.city}")
+            f"Inserting event: {event.ident}, {event.event_name}, {event.long}, {event.lat}, {event.risk}, {event.region}, {event.city}")
 
         cursor.execute("""
             INSERT INTO EVENTS (event_name, long, lat, risk, region, city, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (new_event.event_name, new_event.long, new_event.lat, new_event.risk, new_event.region, new_event.city,
+        """, (event.event_name, event.long, event.lat, event.risk, event.region, event.city,
               datetime.now()))
         connection.commit()
         connection.close()
@@ -111,7 +111,7 @@ class DataBaseActions():
     def fetch_all_coordinates(self):
         connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
-        cursor.execute("SELECT event_name, long, lat, risk, region, city FROM EVENTS")
+        cursor.execute("SELECT id, event_name, long, lat, risk, region, city FROM EVENTS")
         rows = cursor.fetchall()
         connection.close()
 

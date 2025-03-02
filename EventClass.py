@@ -1,5 +1,6 @@
 class Event:
-    def __init__(self, event_name, long, lat, risk, region="", city=""):
+    def __init__(self, ident, event_name, long, lat, risk, region="", city=""):
+        self.ident = ident
         self.event_name = event_name
         self.long = long
         self.lat = lat
@@ -10,6 +11,7 @@ class Event:
 
     def to_dict(self):
         return {
+            "ident": self.ident,
             "event_name": self.event_name,
             "long": self.long,
             "lat": self.lat,
@@ -19,10 +21,11 @@ class Event:
         }
 
     def print_event(self):
-        print(self.event_name, ", ", self.long, ", ", self.lat, ", ", self.region, ", ", self.city, ", ", self.risk)
+        print(self.ident, ", ", self.event_name, ", ", self.long, ", ", self.lat, ", ", self.region, ", ", self.city, ", ", self.risk)
     @staticmethod
     def from_dict(data):
         return Event(
+            ident=data["ident"],
             event_name=data["event_name"],
             long=data["long"],
             lat=data["lat"],

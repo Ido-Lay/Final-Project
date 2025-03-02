@@ -13,9 +13,8 @@ def get_location_info(event):
         region = address.get('state', '')  # The state (region)
         city = address.get('city', '')  # The city
 
-        # Ensure correct order of parameters in the Event constructor
-        new_event = Event(event.event_name, event.long, event.lat, event.risk, region, city)
-        return new_event
+        loc_data = (region, city)
+        return loc_data
 
     print(f"Warning: Could not fetch location info for event {event.event_name}")
     return event
