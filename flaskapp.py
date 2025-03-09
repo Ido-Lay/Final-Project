@@ -8,8 +8,15 @@ from EventClass import Event
 from db_web import  DataBaseActions
 
 database_mouse = DataBaseActions()
-database_mouse.make_database()
 database_mouse.start_cleanup_thread()
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow reusing address
+try:
+    sock.connect(('127.0.0.1', 6000))
+except Exception as e:
+    print(f"Error connecting to server: {e}")
+
 app = Flask(__name__)
 
 def add_all_markers_to_ui(events, m):
@@ -37,19 +44,19 @@ def add_all_markers_to_ui(events, m):
 
 
 def send_marker(json_data):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     event = Event.from_dict(json_data)
     event.print_event()
+
     try:
-        if event.risk == 0:
-            sock.connect(('127.0.0.1', 6000))
-            sock.sendall(json.dumps(json_data).encode('utf-8'))
-        else:
-            database_mouse.insert_event(event)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect(("127.0.0.1", 6000))
+            sock.sendall(json.dumps(json_data).encode('utf-8'))  # Send data
+            print("Packet sent successfully!")
+
     except Exception as e:
         print(f"Error sending data: {e}")
 
-    return 'Sent successfully'
+    return "Sent successfully"
 
 
 @app.route("/api/all_markers")

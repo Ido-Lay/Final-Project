@@ -17,7 +17,6 @@ class DataBaseActions():
     def make_database(self):
         connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
-        cursor.execute("DROP TABLE IF EXISTS EVENTS")
         event_table = """ CREATE TABLE EVENTS (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_name TEXT,
@@ -67,15 +66,17 @@ class DataBaseActions():
 
         # Debugging: Print the data before insertion
         print(
-            f"Inserting event: {event.ident}, {event.event_name}, {event.long}, {event.lat}, {event.risk}, {event.region}, {event.city}")
+            f"Inserting event: {event.ident}, {event.event_name}, {event.long}, {event.lat}, {event.risk}, {region_and_city[0]}, {region_and_city[1]}")
 
         cursor.execute("""
             INSERT INTO EVENTS (event_name, long, lat, risk, region, city, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (event.event_name, event.long, event.lat, event.risk, event.region, event.city,
+        """, (event.event_name, event.long, event.lat, event.risk, region_and_city[0], region_and_city[1],
               datetime.now()))
         connection.commit()
         connection.close()
+
+
 
     def cleanup_database(self):
         connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
@@ -91,7 +92,7 @@ class DataBaseActions():
         connection.close()
 
     def run_scheduler(self):
-        schedule.every(10).minutes.do(self.cleanup_database)
+        schedule.every(1).minutes.do(self.cleanup_database)
         while True:
             schedule.run_pending()
             time.sleep(1)

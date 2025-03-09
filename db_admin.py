@@ -3,6 +3,7 @@ import json
 from EventClass import Event
 import Utils
 from datetime import datetime, timedelta
+
 class DbAdminActions():
     def make_database(self):
         connection = sqlite3.connect('Pending.db', detect_types=sqlite3.PARSE_DECLTYPES)
@@ -23,7 +24,7 @@ class DbAdminActions():
         connection.close()
 
     def insert_event(self, event):
-        connection = sqlite3.connect('Events.db', detect_types=sqlite3.PARSE_DECLTYPES)
+        connection = sqlite3.connect('Pending.db', detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
         region_and_city = Utils.get_location_info(event)
 
@@ -33,12 +34,12 @@ class DbAdminActions():
 
         # Debugging: Print the data before insertion
         print(
-            f"Inserting event: {event.ident}, {event.event_name}, {event.long}, {event.lat}, {event.risk}, {event.region}, {event.city}")
+            f"Inserting event: {event.ident}, {event.event_name}, {event.long}, {event.lat}, {event.risk}, {region_and_city[0]}, {region_and_city[1]}")
 
         cursor.execute("""
             INSERT INTO EVENTS (id, event_name, long, lat, risk, region, city, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (event.ident, event.event_name, event.long, event.lat, event.risk, event.region, event.city,
+        """, (event.ident, event.event_name, event.long, event.lat, event.risk, region_and_city[0], region_and_city[1],
               datetime.now()))
         connection.commit()
         connection.close()
