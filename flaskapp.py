@@ -47,11 +47,27 @@ def send_marker(json_data):
     event = Event.from_dict(json_data)
     event.print_event()
 
-    try:
+    """try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect(("127.0.0.1", 6000))
             sock.sendall(json.dumps(json_data).encode('utf-8'))  # Send data
             print("Packet sent successfully!")
+
+    except Exception as e:
+        print(f"Error sending data: {e}")
+
+    return "Sent successfully"""""
+    try:
+        host = socket.gethostname()  # as both code is running on same pc
+        port = 6000  # socket server port number
+
+        client_socket = socket.socket()  # instantiate
+        client_socket.connect((host, port))  # connect to the server
+
+        client_socket.send(json.dumps(json_data).encode('utf-8'))  # send message
+        data = client_socket.recv(1024).decode()  # receive response
+
+        print('Received from server: ' + data)  # show in terminal
 
     except Exception as e:
         print(f"Error sending data: {e}")

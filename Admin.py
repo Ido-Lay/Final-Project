@@ -3,11 +3,11 @@ import json
 from EventClass import Event
 from db_admin import DbAdminActions
 
-HOST = "127.0.0.1"
-PORT = 6000
-
 db_mouse = DbAdminActions()
 db_mouse.make_database()
+
+"""HOST = "127.0.0.1"
+PORT = 6000
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow reusing address
@@ -34,4 +34,32 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                 except Exception as e:
                     print(f"Error receiving data: {e}")
-                    break  # Exit inner loop on error, but keep server running
+                    break  # Exit inner loop on error, but keep server running"""
+
+
+host = socket.gethostname()
+port = 6000  # initiate port no above 1024
+
+server_socket = socket.socket()  # get instance
+# look closely. The bind() function takes tuple as argument
+server_socket.bind((host, port))  # bind host address and port together
+
+# configure how many client the server can listen simultaneously
+server_socket.listen(2)
+conn, address = server_socket.accept()  # accept new connection
+print("Connection from: " + str(address))
+while True:
+    # receive data stream. it won't accept data packet greater than 1024 bytes
+    data = conn.recv(1024).decode()
+    if not data:
+        # if data is not received break
+        break
+    print("from connected user: " + str(data))
+    event_data = json.loads(data)
+    event = Event.from_dict(event_data)
+    db_mouse.insert_event(event)
+    conn.send(data.encode())  # send data to the client
+    conn.close()
+    conn, address = server_socket.accept()  # accept new connection
+
+
