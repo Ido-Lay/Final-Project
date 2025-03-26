@@ -1,106 +1,78 @@
-import http
 import socket
 import json
-from flask import Flask, render_template_string, request
+from typing import Final
+
+from flask import Flask, request
 import folium
-import sqlite3
-from EventClass import Event
-from db_web import DataBaseActions
+from Event import Event, Risk
+from events_db import EventsDAL
 
-database_mouse = DataBaseActions()
-database_mouse.start_cleanup_thread()
+SERVER_IP: Final[str] = '127.0.0.1'
+SERVER_PORT: Final[int] = 6000
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow reusing address
-try:
-    sock.connect(('127.0.0.1', 6002))
-except Exception as e:
-    print(f"Error connecting to server: {e}")
+EventsDAL.start_cleanup_thread()
 
 app = Flask(__name__)
 
 
-def add_all_markers_to_ui(events, m):
+def add_all_markers_to_ui(events: list[Event], m):
     for event in events:
         print(
-            f"Adding marker: {event.event_name}, Lat: {event.lat}, Long: {event.long}, Risk: {event.risk}")  # Debugging
-        if event.risk == 0:
-            folium.Marker(
-                location=[event.lat, event.long],
-                popup=event.event_name,
-                icon=folium.Icon(color="red", icon="info-sign"),
-            ).add_to(m)
-        if event.risk == 1:
-            folium.Marker(
-                location=[event.lat, event.long],
-                popup=event.event_name,
-                icon=folium.Icon(color="green", icon="info-sign"),
-            ).add_to(m)
-        if event.risk == 2:
-            folium.Marker(
-                location=[event.lat, event.long],
-                popup=event.event_name,
-                icon=folium.Icon(color="blue", icon="info-sign"),
-            ).add_to(m)
+            f"Adding marker: {event.event_name}, Lat: {event.latitude}, Long: {event.longitude}, Risk: {event.risk}")  # Debugging
+        if event.risk == Risk.DANGER:
+            icon_color = 'red'
+        elif event.risk == Risk.GOOD:
+            icon_color = 'green'
+        elif event.risk == Risk.NEUTRAL:
+            icon_color = 'blue'
+        else:
+            icon_color = 'black'
+            # TODO handle it
+
+        folium.Marker(
+            location=[event.latitude, event.longitude],
+            popup=event.event_name,
+            icon=folium.Icon(color=icon_color, icon="info-sign"),
+        ).add_to(m)
 
 
-def send_marker(json_data):
-    event = Event.from_dict(json_data)
+def send_marker(event_json: dict):
+    event = Event.from_dict(event_json)
     event.print_event()
 
-    """try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect(("127.0.0.1", 6002))
-            sock.sendall(json.dumps(json_data).encode('utf-8'))  # Send data
-            print("Packet sent successfully!")
-
-    except Exception as e:
-        print(f"Error sending data: {e}")
-
-    return "Sent successfully"""""
     try:
-        host = socket.gethostname()  # as both code is running on same pc
-        port = 6002  # socket server port number
-
         client_socket = socket.socket()  # instantiate
-        client_socket.connect((host, port))  # connect to the server
-        if event.risk == 0:
-            client_socket.send(json.dumps(json_data).encode('utf-8'))  # send message
+        client_socket.connect((SERVER_IP, SERVER_PORT))  # connect to the server
+        if event.risk == Risk.DANGER:
+            client_socket.send(json.dumps(event_json).encode('utf-8'))  # send message
         else:
-            database_mouse.insert_event(event)
+            EventsDAL.insert_event(event)
 
-    except Exception as e:
-        print(f"Error sending data: {e}")
+    except Exception as ex:
+        print(f"Error sending data: {ex}")
 
     return "Sent successfully"
 
 
 @app.route("/api/all_markers")
-def get_all_markers():
-    all_markers = database_mouse.fetch_all_coordinates()
+def get_all_markers() -> list[dict]:
+    all_markers = EventsDAL.fetch_all_coordinates()
     serialized_markers = [marker.to_dict() for marker in all_markers]
     return serialized_markers
 
 
 @app.route("/api/get_marker", methods=['POST'])
 def get_marker():
-    json_data = request.json
-    return send_marker(json_data)
+    event_json = request.json
+    return send_marker(event_json)
 
 
 @app.route("/")
-def map_with_markers():
+def map_with_markers() -> str:
     m = folium.Map(location=[32.0, 35.0], zoom_start=8, world_copy_jump=True)  # Adjust center and zoom level as needed
-    events = database_mouse.fetch_all_coordinates()
+    events = EventsDAL.fetch_all_coordinates()
     add_all_markers_to_ui(events, m)
     return m._repr_html_()
-
-
-@app.route("/test")
-def test_map():
-    m = folium.Map(location=[32.0, 35.0], zoom_start=8)
-    folium.Marker(location=[40.7128, -74.0060], popup="Test Marker").add_to(m)
-    return m.get_root().render()
 
 
 if __name__ == "__main__":
