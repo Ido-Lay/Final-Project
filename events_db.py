@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import threading
 import time
 from typing import Final
-
 import schedule
 import json
 from Event import Event
