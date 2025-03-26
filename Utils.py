@@ -17,7 +17,8 @@ def get_location_info(event):
         return loc_data
 
     print(f"Warning: Could not fetch location info for event {event.event_name}")
-    return event
+    loc_data = ["unknown", "unknown"]
+    return loc_data
 
 
 

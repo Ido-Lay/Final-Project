@@ -4,7 +4,6 @@ from EventClass import Event
 from db_admin import DbAdminActions
 
 db_mouse = DbAdminActions()
-db_mouse.make_database()
 
 """HOST = "127.0.0.1"
 PORT = 6000
@@ -37,8 +36,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     break  # Exit inner loop on error, but keep server running"""
 
 
-host = socket.gethostname()
-port = 6000  # initiate port no above 1024
+host = '0.0.0.0'
+port = 6002  # initiate port no above 1024
 
 server_socket = socket.socket()  # get instance
 # look closely. The bind() function takes tuple as argument
@@ -46,6 +45,7 @@ server_socket.bind((host, port))  # bind host address and port together
 
 # configure how many client the server can listen simultaneously
 server_socket.listen(2)
+print('accepting')
 conn, address = server_socket.accept()  # accept new connection
 print("Connection from: " + str(address))
 while True:

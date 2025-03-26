@@ -60,7 +60,7 @@ class DataBaseActions():
         cursor = connection.cursor()
         region_and_city = Utils.get_location_info(event)
 
-        if event.region and event.city is None:
+        if event.region is None and event.city is None:
             print(f"Warning: Could not fetch location info for event {event.event_name}")
             return
 

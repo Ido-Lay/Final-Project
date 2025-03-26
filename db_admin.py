@@ -8,7 +8,6 @@ class DbAdminActions():
     def make_database(self):
         connection = sqlite3.connect('Pending.db', detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
-        cursor.execute("DROP TABLE IF EXISTS EVENTS")
         event_table = """ CREATE TABLE EVENTS (
                     id INTEGER,
                     event_name TEXT,
