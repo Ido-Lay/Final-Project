@@ -44,12 +44,12 @@ class AdminDAL():
 
         # Debugging: Print the data before insertion
         print(
-            f"Inserting event: {event.ident}, {event.event_name}, {event.long}, {event.lat}, {event.risk}, {region}, {city}")
+            f"Inserting event: {event.identity}, {event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}")
 
         cursor.execute("""
-            INSERT INTO EVENTS (id, event_name, long, lat, risk, region, city, created_at)
+            INSERT INTO EVENTS (id, event_name, longitude, latitude, risk, region, city, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (event.ident, event.event_name, event.longitude, event.latitude, event.risk, region, region, datetime.now()))
+        """, (event.identity, event.event_name, event.longitude, event.latitude, event.risk.value, region, region, datetime.now()))
 
         connection.commit()
         connection.close()

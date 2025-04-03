@@ -16,12 +16,12 @@ conn, address = server_socket.accept()
 print("Connection from: " + str(address))
 while True:
     data = conn.recv(1024).decode()
-    if not data:
-        break
-    print("from connected user: " + str(data))
-    event_data = json.loads(data)
-    event = Event.from_dict(event_data)
-    AdminDAL.insert_event(event)
-    conn.send(data.encode())
-    conn.close()
+    if data:
+        print("from connected user: " + str(data))
+        event_data = json.loads(data)
+        event = Event.from_dict(event_data)
+        AdminDAL.insert_event(event)
+        conn.send(data.encode())
+        conn.close()
     conn, address = server_socket.accept()
+

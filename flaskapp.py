@@ -19,11 +19,11 @@ def add_all_markers_to_ui(events: list[Event], m):
     for event in events:
         print(
             f"Adding marker: {event.event_name}, Lat: {event.latitude}, Long: {event.longitude}, Risk: {event.risk}")  # Debugging
-        if event.risk == Risk.DANGER:
+        if event.risk == 0:
             icon_color = 'red'
-        elif event.risk == Risk.GOOD:
+        elif event.risk == 1:
             icon_color = 'green'
-        elif event.risk == Risk.NEUTRAL:
+        elif event.risk == 2:
             icon_color = 'blue'
         else:
             icon_color = 'black'

@@ -3,9 +3,9 @@ from enum import Enum
 
 
 class Risk(Enum):
-    DANGER = 0,
-    GOOD = 1,
-    NEUTRAL = 2,
+    DANGER = 0
+    GOOD = 1
+    NEUTRAL = 2
 
 
 @dataclass
