@@ -7,7 +7,7 @@ import schedule
 import json
 from Event import Event
 from location_from_coordinates import get_location_from_coordinates
-
+from User import User
 DATABASE_FILENAME: Final[str] = 'final_project.db'  # TODO change
 
 
@@ -78,6 +78,42 @@ class EventsDAL:
 
         connection.commit()
         connection.close()
+
+    @staticmethod
+    def insert_user(user: User):
+        conn = sqlite3.connect(DATABASE_FILENAME)
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO USERS (name, mail_address, password_hash, home_long, home_lat)
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                user.name,
+                user.mail_address,
+                user.password_hash,
+                user.home_address["longitude"],
+                user.home_address["latitude"]
+            ))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            return False  # email already exists
+        finally:
+            conn.close()
+        return True
+
+    @staticmethod
+    def get_user_by_email(email: str) -> User | None:
+        conn = sqlite3.connect(DATABASE_FILENAME)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS WHERE mail_address = ?", (email,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            name, email, password_hash, long, lat = row
+            return User(name=name, mail_address=email, password=password_hash,
+                        home_address={"longitude": long, "latitude": lat})
+        return None
 
     @staticmethod
     def cleanup_database():
