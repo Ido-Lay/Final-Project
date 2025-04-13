@@ -95,28 +95,42 @@ def logout():
 def report_event():
     ...
 
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        street = request.form['street']
-        city = request.form['city']
-        state = request.form['state']
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
+        password = request.form["password"]
+        street = request.form["street"]
+        city = request.form["city"]
+        state = request.form["state"]
 
-        # Get the address as a dictionary
-        address = {"street": street, "city": city, "state": state}
+        # Check if user already exists
+        existing_user = EventsDAL.get_user_by_email(email)
+        if existing_user:
+            return render_template("signup_error.html", email=email)
 
-        # Create the user object
-        user = User(name, home_address=address, mail_address=email, password=password)
+        # If new user, proceed to create
+        from geopy.geocoders import Nominatim
+        geolocator = Nominatim(user_agent="signup_app")
+        location = geolocator.geocode(f"{street}, {city}, {state}, Israel")
+        if location is None:
+            flash("Could not find the location. Please enter a valid address.")
+            return redirect(url_for("signup"))
 
-        # Add the user to the simulated database (replace with actual database insert)
+        user = User(
+            name=name,
+            mail_address=email,
+            password=password,
+            home_address={"longitude": location.longitude, "latitude": location.latitude}
+        )
+
         EventsDAL.insert_user(user)
+        flash("Account created successfully! Please log in.")
+        return redirect(url_for("login"))
 
-        return redirect(url_for('login'))
-
-    return render_template('signup.html')
+    return render_template("signup.html")
 
 
 @app.route("/api/all_markers")
@@ -133,116 +147,18 @@ def get_marker():
 
 
 @app.route("/")
-def map_with_markers() -> str:
-    m = folium.Map(location=[32.0, 35.0], zoom_start=8, world_copy_jump=True)  # Adjust center and zoom level as needed
+@login_required
+def map_with_markers():
+    m = folium.Map(location=[32.0, 35.0], zoom_start=8)
     events = EventsDAL.fetch_all_coordinates()
     add_all_markers_to_ui(events, m)
-    return m._repr_html_()
+    map_html = m._repr_html_()
+
+    return render_template("map_view.html", map_html=map_html)
 
 @app.route("/submit")
 def submit_event():
-    return render_template_string("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Submit an Event</title>
-        <style>
-            #map {
-                width: 100%;
-                height: 90vh;
-            }
-            .leaflet-popup-content {
-                width: 200px !important;
-            }
-        </style>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    </head>
-    <body>
-        <h2>Submit an Event</h2>
-        <p>Click anywhere on the map to report an event</p>
-        <div id="map"></div>
-
-        <script>
-            // Create map
-            let map = L.map('map').setView([32.0, 35.0], 6);
-
-            // Add OpenStreetMap tiles
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
-            // Auto center on user location
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    let lat = pos.coords.latitude;
-                    let lon = pos.coords.longitude;
-                    map.setView([lat, lon], 13);
-                }, err => {
-                    console.warn("Geolocation failed:", err);
-                });
-            }
-
-            // Handle map click
-            map.on('click', function(e) {
-                let lat = e.latlng.lat;
-                let lng = e.latlng.lng;
-
-                let popupContent = `
-                    <form id="eventForm">
-                        <label>Event Name:</label><br>
-                        <input type="text" id="eventName" required><br>
-                        <label>Risk Level:</label><br>
-                        <select id="riskLevel">
-                            <option value="0">DANGER</option>
-                            <option value="1">GOOD</option>
-                            <option value="2">NATURAL</option>
-                        </select><br><br>
-                        <button type="submit">Submit</button>
-                    </form>
-                `;
-
-                let popup = L.popup()
-                    .setLatLng([lat, lng])
-                    .setContent(popupContent)
-                    .openOn(map);
-
-                // Wait for form submission
-                setTimeout(() => {
-                    document.getElementById("eventForm").addEventListener("submit", function(event) {
-                        event.preventDefault();
-                        let name = document.getElementById("eventName").value;
-                        let risk = parseInt(document.getElementById("riskLevel").value);
-
-                        fetch('/api/get_marker', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                identity: 0,
-                                event_name: name,
-                                latitude: lat,
-                                longitude: lng,
-                                risk: risk,
-                                region: "Unknown",
-                                city: "Unknown"
-                            })
-                        }).then(res => res.text())
-                          .then(data => {
-                              alert("Event submitted!");
-                              map.closePopup();
-                          })
-                          .catch(err => alert("Error submitting event: " + err));
-                    });
-                }, 100);
-            });
-        </script>
-    </body>
-    </html>
-    """)
+    return render_template("submit_event.html")
 
 
 

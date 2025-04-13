@@ -3,13 +3,19 @@ from geopy.geocoders import Nominatim
 
 class User:
     def __init__(self, name: str, home_address: dict[str, float] = None, mail_address: str = None,
-                 password: str = None):
+                 password: str = None, password_is_hashed: bool = False):
         self.name = name
         self.home_address = home_address if home_address is not None else {"longitude": None, "latitude": None}
         self.mail_address = mail_address
-        self.password_hash = self._hash_password(password)
-        if home_address:
-            self.latitude, self.longitude = self.get_coordinates_from_address(home_address)
+        if password_is_hashed:
+            self.password_hash = password
+        else:
+            self.password_hash = self._hash_password(password)
+
+        # Only try to get coordinates if address has 'street', 'city', and 'state'
+        if home_address and all(k in home_address for k in ("street", "city", "state")):
+            lat, lon = self.get_coordinates_from_address(home_address)
+            self.home_address = {"latitude": lat, "longitude": lon}
 
 
     def _hash_password(self, password: str) -> str:

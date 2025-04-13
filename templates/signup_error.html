@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Already Exists</title>
+</head>
+<body>
+    <h2>Signup Error</h2>
+    <p>The email <strong>{{ email }}</strong> is already registered.</p>
+    <p>Please <a href="{{ url_for('login') }}">log in here</a> instead.</p>
+
+    <form action="{{ url_for('signup') }}" method="get">
+        <button type="submit">Back to Sign Up</button>
+    </form>
+</body>
+</html>

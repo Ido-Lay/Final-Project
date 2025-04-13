@@ -1,0 +1,31 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Map App{% endblock %}</title>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('map_with_markers') }}">Map View</a> |
+        <a href="{{ url_for('submit_event') }}">Submit Event</a> |
+        {% if current_user.is_authenticated %}
+            <span>Welcome, {{ current_user.name }}!</span>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+        {% endif %}
+    </nav>
+    <hr>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for msg in messages %}
+                    <li>{{ msg }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</body>
+</html>
