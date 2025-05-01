@@ -4,5 +4,88 @@
 
 {% block content %}
 <h2>Event Map</h2>
-<div>{{ map_html|safe }}</div>
+
+<form id="filterForm" style="margin-bottom: 1em;">
+    <label for="city">City:</label>
+    <select id="cityFilter" name="city">
+        <option value="">All</option>
+        {% for city in cities %}
+            <option value="{{ city }}">{{ city }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="region">Region:</label>
+    <select id="regionFilter" name="region">
+        <option value="">All</option>
+        {% for region in regions %}
+            <option value="{{ region }}">{{ region }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="risk">Risk:</label>
+    <select id="riskFilter" name="risk">
+        <option value="">All</option>
+        <option value="0">DANGER</option>
+        <option value="1">GOOD</option>
+        <option value="2">NATURAL</option>
+    </select>
+
+    <button type="button" id="applyFilters">Apply Filters</button>
+</form>
+
+<div id="map" style="height: 80vh; width: 100%;"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    const map = L.map('map').setView([32.0, 35.0], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const markerGroup = L.layerGroup().addTo(map);
+
+    function loadMarkers(filters = {}) {
+        markerGroup.clearLayers();
+        const params = new URLSearchParams(filters).toString();
+
+        fetch("/api/all_markers?" + params)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(event => {
+                    let iconColor = 'black';
+                    if (event.risk === 0) iconColor = 'red';
+                    else if (event.risk === 1) iconColor = 'green';
+                    else if (event.risk === 2) iconColor = 'blue';
+
+                    const marker = L.marker([event.latitude, event.longitude], {
+                        icon: L.icon({
+                            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                            shadowSize: [41, 41]
+                        })
+                    }).bindPopup(event.event_name);
+
+                    markerGroup.addLayer(marker);
+                });
+            });
+    }
+
+    // Initial load
+    loadMarkers();
+
+    document.getElementById("applyFilters").addEventListener("click", () => {
+        const filters = {
+            city: document.getElementById("cityFilter").value,
+            region: document.getElementById("regionFilter").value,
+            risk: document.getElementById("riskFilter").value
+        };
+        loadMarkers(filters);
+    });
+</script>
 {% endblock %}

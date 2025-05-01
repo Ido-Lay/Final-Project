@@ -118,6 +118,21 @@ class EventsDAL:
         return None
 
     @staticmethod
+    def get_all_users() -> User | None:
+        conn = sqlite3.connect(DATABASE_FILENAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS")
+        rows = cursor.fetchall()
+        conn.close()
+
+        users: list[User] = []
+        for row in rows:
+            e = User(*row)
+            users.append(e)
+
+        return users
+
+    @staticmethod
     def cleanup_database():
         connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
@@ -144,16 +159,60 @@ class EventsDAL:
         cleanup_thread.start()
 
     @staticmethod
-    def fetch_all_coordinates():
-        connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
-        cursor = connection.cursor()
-        cursor.execute("SELECT id, event_name, longitude, latitude, risk, region, city FROM EVENTS")
-        rows = cursor.fetchall()
-        connection.close()
+    def fetch_all_coordinates(city=None, region=None, risk=None) -> list[Event]:
+        conn = sqlite3.connect(DATABASE_FILENAME)
+        cursor = conn.cursor()
 
-        events: list[Event] = []
+        # Modify the query to include the identity field
+        query = "SELECT id, event_name, latitude, longitude, risk, city, region FROM events WHERE 1=1"
+        params = []
+
+        if city:
+            query += " AND city = ?"
+            params.append(city)
+
+        if region:
+            query += " AND region = ?"
+            params.append(region)
+
+        if risk is not None:
+            query += " AND risk = ?"
+            params.append(risk)
+
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        conn.close()
+
+        events = []
         for row in rows:
-            e = Event(*row)
-            events.append(e)
+            # Now create Event object with identity
+            event = Event(
+                identity=row[0],  # Add the identity here
+                event_name=row[1],
+                latitude=row[2],
+                longitude=row[3],
+                risk=row[4],
+                city=row[5],
+                region=row[6]
+            )
+            events.append(event)
 
         return events
+
+    @staticmethod
+    def get_unique_cities():
+        conn = sqlite3.connect(DATABASE_FILENAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT city FROM EVENTS WHERE city IS NOT NULL")
+        cities = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return cities
+
+    @staticmethod
+    def get_unique_regions():
+        conn = sqlite3.connect(DATABASE_FILENAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT region FROM EVENTS WHERE region IS NOT NULL")
+        regions = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return regions

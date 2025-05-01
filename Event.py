@@ -24,14 +24,14 @@ class Event:
             "event_name": self.event_name,
             "longitude": self.longitude,
             "latitude": self.latitude,
-            "risk": self.risk.value,
+            "risk": self.risk,
             "region": self.region,
             "city": self.city,
         }
 
     def print_event(self):
-        print(self.identity, ", ", self.event_name, ", ", self.longitude, ", ", self.latitude, ", ", self.region, ", ",
-              self.city, ", ", self.risk)
+        print("id: ", self.identity, ", ", "name: ", self.event_name, ", ", "longitude: ", self.longitude, ", ", "latitude: ", self.latitude, ", ", "region: ", self.region, ", ",
+              "city: ", self.city, ", ", "risk: ", self.risk)
 
     @classmethod
     def from_dict(cls, data: dict):

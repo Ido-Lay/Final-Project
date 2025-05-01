@@ -6,7 +6,14 @@
     <style>
         #map {
             width: 100%;
-            height: 90vh;
+            height: 80vh;
+        }
+        .filters {
+            margin-bottom: 10px;
+        }
+        select {
+            margin-right: 10px;
+            padding: 5px;
         }
         .leaflet-popup-content {
             width: 200px !important;
@@ -18,6 +25,29 @@
 <body>
     <h2>Submit an Event</h2>
     <p>Click anywhere on the map to report an event</p>
+
+    <div class="filters">
+        <label for="cityFilter">City:</label>
+        <select id="cityFilter">
+            <option value="">All</option>
+        </select>
+
+        <label for="regionFilter">Region:</label>
+        <select id="regionFilter">
+            <option value="">All</option>
+        </select>
+
+        <label for="riskFilter">Risk:</label>
+        <select id="riskFilter">
+            <option value="">All</option>
+            <option value="0">DANGER</option>
+            <option value="1">GOOD</option>
+            <option value="2">NATURAL</option>
+        </select>
+
+        <button onclick="loadAllMarkers()">Apply Filters</button>
+    </div>
+
     <div id="map"></div>
 
     <script>
@@ -30,44 +60,67 @@
 
         const markerGroup = L.layerGroup().addTo(map);
 
-        // Auto center on user location
+        // Auto-center on user
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
-                let lat = pos.coords.latitude;
-                let lon = pos.coords.longitude;
-                map.setView([lat, lon], 13);
-            }, err => {
-                console.warn("Geolocation failed:", err);
+                map.setView([pos.coords.latitude, pos.coords.longitude], 13);
             });
         }
 
-        function loadAllMarkers() {
-            markerGroup.clearLayers();
-            fetch("/api/all_markers")
-                .then(res => res.json())
-                .then(data => {
-                    data.forEach(event => {
-                        let iconColor = 'black';
-                        if (event.risk === 0) iconColor = 'red';
-                        else if (event.risk === 1) iconColor = 'green';
-                        else if (event.risk === 2) iconColor = 'blue';
+        async function loadFilterOptions() {
+            const res = await fetch("/api/filters");
+            const data = await res.json();
 
-                        const marker = L.marker([event.latitude, event.longitude], {
-                            icon: L.icon({
-                                iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
-                                iconSize: [25, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                                shadowSize: [41, 41]
-                            })
-                        }).bindPopup(event.event_name);
-                        markerGroup.addLayer(marker);
-                    });
-                });
+            const citySelect = document.getElementById("cityFilter");
+            data.cities.forEach(city => {
+                const option = document.createElement("option");
+                option.value = city;
+                option.text = city;
+                citySelect.appendChild(option);
+            });
+
+            const regionSelect = document.getElementById("regionFilter");
+            data.regions.forEach(region => {
+                const option = document.createElement("option");
+                option.value = region;
+                option.text = region;
+                regionSelect.appendChild(option);
+            });
         }
 
-        loadAllMarkers();
+        async function loadAllMarkers() {
+            const city = document.getElementById("cityFilter").value;
+            const region = document.getElementById("regionFilter").value;
+            const risk = document.getElementById("riskFilter").value;
+
+            const params = new URLSearchParams();
+            if (city) params.append("city", city);
+            if (region) params.append("region", region);
+            if (risk !== "") params.append("risk", risk);
+
+            markerGroup.clearLayers();
+            const res = await fetch("/api/all_markers?" + params.toString());
+            const data = await res.json();
+
+            data.forEach(event => {
+                let iconColor = 'black';
+                if (event.risk === 0) iconColor = 'red';
+                else if (event.risk === 1) iconColor = 'green';
+                else if (event.risk === 2) iconColor = 'blue';
+
+                const marker = L.marker([event.latitude, event.longitude], {
+                    icon: L.icon({
+                        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                        shadowSize: [41, 41]
+                    })
+                }).bindPopup(event.event_name);
+                markerGroup.addLayer(marker);
+            });
+        }
 
         map.on('click', function(e) {
             let lat = e.latlng.lat;
@@ -87,7 +140,7 @@
                 </form>
             `;
 
-            let popup = L.popup()
+            L.popup()
                 .setLatLng([lat, lng])
                 .setContent(popupContent)
                 .openOn(map);
@@ -106,9 +159,9 @@
                         body: JSON.stringify({
                             identity: 0,
                             event_name: name,
-                            latitude: lat,
-                            longitude: lng,
                             risk: risk,
+                            longitude: lng,
+                            latitude: lat,
                             region: "Unknown",
                             city: "Unknown"
                         })
@@ -117,11 +170,13 @@
                           alert("Event submitted!");
                           map.closePopup();
                           loadAllMarkers();  // Refresh markers
-                      })
-                      .catch(err => alert("Error submitting event: " + err));
+                      }).catch(err => alert("Error submitting event: " + err));
                 });
             }, 100);
         });
+
+        loadFilterOptions();
+        loadAllMarkers();
     </script>
 </body>
 </html>

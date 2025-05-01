@@ -135,9 +135,12 @@ def signup():
 
 @app.route("/api/all_markers")
 def get_all_markers() -> list[dict]:
-    all_markers = EventsDAL.fetch_all_coordinates()
-    serialized_markers = [marker.to_dict() for marker in all_markers]
-    return serialized_markers
+    city = request.args.get("city")
+    region = request.args.get("region")
+    risk = request.args.get("risk", type=int)
+
+    all_markers = EventsDAL.fetch_all_coordinates(city=city, region=region, risk=risk)
+    return [m.to_dict() for m in all_markers]
 
 
 @app.route("/api/get_marker", methods=['POST'])
@@ -154,11 +157,21 @@ def map_with_markers():
     add_all_markers_to_ui(events, m)
     map_html = m._repr_html_()
 
-    return render_template("map_view.html", map_html=map_html)
+    cities = EventsDAL.get_unique_cities()
+    regions = EventsDAL.get_unique_regions()
+
+    return render_template("map_view.html", map_html=map_html, cities=cities, regions=regions)
 
 @app.route("/submit")
 def submit_event():
     return render_template("submit_event.html")
+
+@app.route("/api/filters")
+def get_filter_options():
+    cities = EventsDAL.get_unique_cities()
+    regions = EventsDAL.get_unique_regions()
+    return {"cities": cities, "regions": regions}
+
 
 
 

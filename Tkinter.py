@@ -6,7 +6,8 @@ from email.mime.multipart import MIMEMultipart
 from math import radians, cos, sin, sqrt, atan2
 from Event import Event, Risk  # Assuming Event and Risk are in event.py
 from User import User  # Assuming User is in user.py
-
+from admin_db import AdminDAL
+from events_db import EventsDAL
 
 # Function to calculate distance between two coordinates
 def haversine(longitude1: float, latitude1: float, longitude2: float, latitude2: float):
@@ -21,8 +22,8 @@ def haversine(longitude1: float, latitude1: float, longitude2: float, latitude2:
 
 # Function to send emails
 def send_email(user: User, event: Event):
-    sender_email = "idofinproj@yahoo.com"  # Change to your email
-    sender_password = "FinalProjectVacation100"  # Change to your password
+    sender_email = "ido.eliavgames@gmail.com"  # Your Outlook email
+    sender_password = ""  # Your Outlook password
 
     msg = MIMEMultipart()
     msg['From'] = sender_email
@@ -39,11 +40,12 @@ def send_email(user: User, event: Event):
     msg.attach(MIMEText(body, 'plain'))
 
     try:
-        server = smtplib.SMTP('smtp.example.com', 587)  # Change to your SMTP server
+        # Connect to Outlook SMTP server
+        server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, user.mail_address, msg.as_string())
-        server.quit()
+        server.login(sender_email, sender_password)  # Login to Outlook account
+        server.sendmail(sender_email, user.mail_address, msg.as_string())  # Send the email
+        server.quit()  # Close the connection
         return True
     except Exception as e:
         print(f"Failed to send email: {e}")
@@ -97,15 +99,7 @@ class AdminPanel:
                                  f"Failed to send email to {selected_user.name} ({selected_user.mail_address})")
 
 
-# Example Usage
-events = [
-    Event(0, "Test3", 32.4341015, 34.895972, Risk.GOOD, "", ""),
-]
-users = [
-    User("Alice", {"longitude": 32.4341, "latitude": 34.8959}, "ido.eliavgames@gmail.com", "password"),
-    User("Bob", {"longitude": 32.4345, "latitude": 34.8960}, "ido.eliavgames@gmail.com", "password"),
-]
 
 root = tk.Tk()
-app = AdminPanel(root, events, users)
+app = AdminPanel(root, AdminDAL.fetch_all_coordinates() , EventsDAL.get_all_users())
 root.mainloop()
