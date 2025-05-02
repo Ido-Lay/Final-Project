@@ -2,12 +2,13 @@ import sqlite3
 from datetime import datetime, timedelta
 import threading
 import time
-from typing import Final
+from typing import Final, Optional
 import schedule
 import json
 from Event import Event
 from location_from_coordinates import get_location_from_coordinates
 from User import User
+
 DATABASE_FILENAME: Final[str] = 'final_project.db'  # TODO change
 
 
@@ -66,7 +67,6 @@ class EventsDAL:
         if (event.region, event.city) == ("Unknown", "Unknown"):
             print(f"Warning: Could not fetch location info for event {event.event_name}")
 
-
         # Debugging: Print the data before insertion
         print(f"Inserting event: "
               f"{event.identity}, {event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}")
@@ -103,7 +103,7 @@ class EventsDAL:
         conn.close()
 
     @staticmethod
-    def get_user_by_email(email: str) -> User | None:
+    def get_user_by_email(email: str) -> Optional[User]:
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
         cursor.execute(
@@ -118,7 +118,7 @@ class EventsDAL:
         return None
 
     @staticmethod
-    def get_all_users() -> User | None:
+    def get_all_users() -> Optional[list[User]]:
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
         cursor.execute("SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS")
@@ -127,7 +127,15 @@ class EventsDAL:
 
         users: list[User] = []
         for row in rows:
-            e = User(*row)
+            name, email, password_hash, long, lat = row
+            row_data = {
+                'name': name,
+                'home_address': {"home_long": long,
+                                 "home_lat": lat},
+                'mail_address': email,
+                'password': password_hash,
+            }
+            e = User.from_dict(row_data)
             users.append(e)
 
         return users
