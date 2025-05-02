@@ -55,18 +55,54 @@ class AdminDAL():
         connection.close()
 
     @staticmethod
-    def fetch_all_coordinates():
-        connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
-        cursor = connection.cursor()
-        cursor.execute("SELECT id, event_name, longitude, latitude, risk, region, city FROM EVENTS")
-        rows = cursor.fetchall()
-        connection.close()
+    @staticmethod
+    def fetch_all_coordinates() -> list[Event]:  # Assuming it returns a list of Event objects
+        conn = sqlite3.connect(DATABASE_FILENAME)
+        cursor = conn.cursor()
 
-        events: list[Event] = []
+        # ***** MODIFIED QUERY: Added 'risk' column *****
+        query = "SELECT id, event_name, latitude, longitude, risk, city, region FROM EVENTS"
+        # Note: Removed WHERE 1=1 as it's not needed if there are no conditions yet.
+        #       Add WHERE clauses if filtering is intended here.
+
+        try:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Error fetching admin events: {e}")
+            rows = []  # Return empty list on error
+        finally:
+            conn.close()
+
+        events = []
         for row in rows:
-            e = Event(*row)
-            events.append(e)
+            try:
+                # ***** Ensure Risk enum conversion if needed *****
+                # Assuming 'risk' in the DB is an integer corresponding to Risk enum value
+                from Event import Risk  # Import Risk enum here or at top level
+                risk_value = row[4]
+                try:
+                    risk_enum = Risk(risk_value)  # Convert integer to Risk enum member
+                except ValueError:
+                    print(
+                        f"Warning: Invalid risk value '{risk_value}' for event ID {row[0]}. Using default or skipping.")
+                    # Decide how to handle invalid risk - skip, use default, etc.
+                    # For now, let's skip:
+                    continue
+
+                event = Event(
+                    identity=row[0],
+                    event_name=row[1],
+                    latitude=row[2],
+                    longitude=row[3],
+                    # ***** Use the fetched risk value (converted to Enum) *****
+                    risk=risk_enum,  # Pass the Risk enum member
+                    city=row[5] if row[5] else "Unknown",  # Handle potential NULLs
+                    region=row[6] if row[6] else "Unknown"  # Handle potential NULLs
+                )
+                events.append(event)
+            except Exception as e:
+                print(f"Error processing row {row}: {e}")  # Catch errors during Event object creation
 
         return events
-
 
