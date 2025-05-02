@@ -33,28 +33,46 @@ class AdminDAL():
         cursor.execute(event_table)
 
     @staticmethod
-    def insert_event(event):
+    def insert_event(event: Event):
         connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
         region, city = get_location_from_coordinates(event)
 
         if (event.region, event.city) == ("Unknown", "Unknown"):
             print(f"Warning: Could not fetch location info for event {event.event_name}")
-            return
 
         # Debugging: Print the data before insertion
-        print(
-            f"Inserting event: {event.identity}, {event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}")
+        print(f"Inserting event: "
+              f"{event.identity}, {event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}")
 
         cursor.execute("""
             INSERT INTO EVENTS (id, event_name, longitude, latitude, risk, region, city, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (event.identity, event.event_name, event.longitude, event.latitude, event.risk.value, region, region, datetime.now()))
+        """, (event.identity, event.event_name, event.longitude, event.latitude, event.risk.value, region, city, datetime.now()))
 
         connection.commit()
         connection.close()
 
+
     @staticmethod
+    def delete_event(db_id):
+        connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
+        cursor = connection.cursor()
+        try:
+            with sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM EVENTS WHERE id = ?", (db_id,))
+            if cursor.rowcount == 0:
+                print(f"Warning: No event found with id {db_id}. No rows deleted.")
+                return False
+            else:
+                print(f"Successfully deleted event with id {db_id}.")
+                return True
+
+        except sqlite3.Error as e:
+            print(f"Database error occurred: {e}")
+            return False
+
     @staticmethod
     def fetch_all_coordinates() -> list[Event]:  # Assuming it returns a list of Event objects
         conn = sqlite3.connect(DATABASE_FILENAME)
@@ -105,4 +123,6 @@ class AdminDAL():
                 print(f"Error processing row {row}: {e}")  # Catch errors during Event object creation
 
         return events
+
+
 

@@ -156,7 +156,7 @@ class EventsDAL:
 
     @staticmethod
     def run_scheduler():
-        schedule.every(1).minutes.do(EventsDAL.cleanup_database)
+        schedule.every(10).minutes.do(EventsDAL.cleanup_database)
         while True:
             schedule.run_pending()
             time.sleep(1)
