@@ -38,7 +38,7 @@ FONT_BUTTON_SIZE = 11
 
 # --- Email Credentials ---
 SENDER_EMAIL = "ido.eliavgames@gmail.com"
-SENDER_PASSWORD = "" # <--- USE YOUR GMAIL APP PASSWORD HERE
+SENDER_PASSWORD = "duzfqrasicoeftnu" # <--- USE YOUR GMAIL APP PASSWORD HERE
 IMAP_SERVER = "imap.gmail.com"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
@@ -81,7 +81,6 @@ def send_email(user: User, event: Event):
     Event Name: {event.event_name} (ID: {event.identity})
     Reported Location: {event.city}, {event.region}
     Coordinates: ({event.latitude:.4f}, {event.longitude:.4f})
-    Risk Level: {event.risk.name if hasattr(event.risk, 'name') else event.risk}
 
     Could you please help us verify if this event is accurately reported?
 
@@ -386,6 +385,12 @@ class AdminPanel:
                                             # Mark as read *after* successful processing
                                             mail.store(email_id_bytes, '+FLAGS', '\\Seen')
                                             processed_email_ids.add(email_id_str)
+                                            try:
+                                                AdminDAL.delete_event(event_id)
+                                                print(f"  - Deleted event ID {event_id} from admin DB.")
+                                            except Exception as del_e:
+                                                print(
+                                                    f"  - Failed to delete event ID {event_id} from admin DB: {del_e}")
                                         except sqlite3.IntegrityError as ie:
                                              print(f"  - DB Integrity Error inserting event ID {event_id}: {ie}. Might already exist.")
                                              insert_failures.append(f"Event {event_display} (Already exists or constraint violation)")
@@ -402,11 +407,11 @@ class AdminPanel:
                                         print(f"  - DENIED: Event {event_display} by {sender_email_addr}")
                                         denials_processed.append(f"Event {event_display} by {sender_email_addr}")
                                         # TODO: Optional - Implement deletion from admin_db if needed
-                                        # try:
-                                        #   AdminDAL.delete_event(event_id) # Requires adding this method to AdminDAL
-                                        #   print(f"  - Deleted event ID {event_id} from admin DB.")
-                                        # except Exception as del_e:
-                                        #   print(f"  - Failed to delete event ID {event_id} from admin DB: {del_e}")
+                                        try:
+                                          AdminDAL.delete_event(event_id)
+                                          print(f"  - Deleted event ID {event_id} from admin DB.")
+                                        except Exception as del_e:
+                                          print(f"  - Failed to delete event ID {event_id} from admin DB: {del_e}")
 
                                         # Mark denied email as read
                                         mail.store(email_id_bytes, '+FLAGS', '\\Seen')
