@@ -226,12 +226,12 @@ class EveMapDAL:
         return events
 
     @staticmethod
-    def fetch_all_coordinates_from_events():
-        return EveMapDAL.fetch_all_coordinates_from_table('EVENTS')
+    def fetch_all_coordinates_from_events(city=None, region=None, risk=None):
+        return EveMapDAL.fetch_all_coordinates_from_table('EVENTS', city, region, risk)
 
     @staticmethod
-    def fetch_all_coordinates_from_admin_events():
-        return EveMapDAL.fetch_all_coordinates_from_table('ADMIN_EVENTS')
+    def fetch_all_coordinates_from_admin_events(city=None, region=None, risk=None):
+        return EveMapDAL.fetch_all_coordinates_from_table('ADMIN_EVENTS', city, region, risk)
 
     @staticmethod
     def get_unique_cities():
