@@ -1,23 +1,27 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
-from tkinter import font as tkFont
-import smtplib
-import imaplib
 import email
+import imaplib
+import os
 import re
-from email.mime.text import MIMEText
+import smtplib
+import sqlite3  # Import for specific error handling
+import tkinter as tk
 from email.mime.multipart import MIMEMultipart
-from math import radians, cos, sin, sqrt, atan2
-import sqlite3 # Import for specific error handling
-from datetime import datetime # Needed for error messages potentially
+from email.mime.text import MIMEText
+from math import atan2, cos, radians, sin, sqrt
+from tkinter import font as tkFont
+from tkinter import messagebox, ttk
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Import your actual classes and functions ---
 try:
+    from admin_db import AdminDAL  # From admin_db.py
     from Event import Event, Risk  # Assuming Risk enum is in Event.py
+    from events_db import EventsDAL  # From dal.py
     from User import User
-    from admin_db import AdminDAL       # From admin_db.py
-    from events_db import EventsDAL     # From events_db.py
+
     # from location_from_coordinates import get_location_from_coordinates # Needed by DALs, not directly here
 except ImportError as e:
     print(f"ERROR: Failed to import required modules: {e}")
@@ -30,18 +34,19 @@ except ImportError as e:
 PAD_X = 15
 PAD_Y = 8
 WINDOW_WIDTH = 700
-WINDOW_HEIGHT = 450 # Slightly increased height for status label
+WINDOW_HEIGHT = 450  # Slightly increased height for status label
 FONT_FAMILY = "Segoe UI"
 FONT_NORMAL_SIZE = 11
 FONT_LABEL_SIZE = 12
 FONT_BUTTON_SIZE = 11
 
 # --- Email Credentials ---
-SENDER_EMAIL = "ido.eliavgames@gmail.com"
-SENDER_PASSWORD = "duzfqrasicoeftnu" # <--- USE YOUR GMAIL APP PASSWORD HERE
+SENDER_EMAIL = os.getenv("GMAIL_APP_MAIl")
+SENDER_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 IMAP_SERVER = "imap.gmail.com"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
+
 
 # Function to calculate distance (remains the same)
 def haversine(longitude1: float, latitude1: float, longitude2: float, latitude2: float):
@@ -53,25 +58,28 @@ def haversine(longitude1: float, latitude1: float, longitude2: float, latitude2:
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return R * c * 1000
 
+
 # Function to send emails (remains the same)
 def send_email(user: User, event: Event):
     sender_email = SENDER_EMAIL
     sender_password = SENDER_PASSWORD
 
     if not sender_password:
-       print("ERROR: Sender password not set.")
-       messagebox.showerror("Configuration Error", "Email password is not configured.")
-       return False
+        print("ERROR: Sender password not set.")
+        messagebox.showerror("Configuration Error", "Email password is not configured.")
+        return False
 
     if not user or not user.mail_address:
         print(f"Error: Invalid user or missing email for: {user.name if user else 'Unknown'}")
-        messagebox.showerror("User Error", f"Invalid user data or missing email for: {user.name if user else 'Unknown'}")
+        messagebox.showerror(
+            "User Error", f"Invalid user data or missing email for: {user.name if user else 'Unknown'}"
+        )
         return False
 
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = user.mail_address
-    msg['Subject'] = f"Action Needed: Confirm Event '{event.event_name}' (Event ID: {event.identity})" # Includes ID
+    msg['Subject'] = f"Action Needed: Confirm Event '{event.event_name}' (Event ID: {event.identity})"  # Includes ID
 
     body = f"""
     Dear {user.name},
@@ -112,6 +120,7 @@ def send_email(user: User, event: Event):
         print(f"Failed to send email to {user.mail_address}: {e}")
         messagebox.showerror("Email Error", f"Failed to send email:\n{e}")
         return False
+
 
 # Tkinter UI for admin panel
 class AdminPanel:
@@ -156,7 +165,9 @@ class AdminPanel:
 
         self.event_var = tk.StringVar()
         event_display_list = [f"{e.event_name} (ID: {e.identity})" for e in self.events]
-        self.event_combo = ttk.Combobox(content_frame, textvariable=self.event_var, values=event_display_list, state='readonly', width=40)
+        self.event_combo = ttk.Combobox(
+            content_frame, textvariable=self.event_var, values=event_display_list, state='readonly', width=40
+        )
         if not self.events:
             self.event_combo['values'] = ["No events found in admin DB"]
             self.event_var.set("No events found in admin DB")
@@ -171,7 +182,9 @@ class AdminPanel:
 
         self.user_var = tk.StringVar()
         user_display_list = [f"{u.name} ({u.mail_address})" for u in self.users if u.mail_address]
-        self.user_combo = ttk.Combobox(content_frame, textvariable=self.user_var, values=user_display_list, state='readonly', width=40)
+        self.user_combo = ttk.Combobox(
+            content_frame, textvariable=self.user_var, values=user_display_list, state='readonly', width=40
+        )
         if not user_display_list:
             self.user_combo['values'] = ["No users with email found"]
             self.user_var.set("No users with email found")
@@ -182,14 +195,16 @@ class AdminPanel:
 
         # --- Status Label ---
         self.status_var = tk.StringVar()
-        self.status_label = ttk.Label(content_frame, textvariable=self.status_var, font=self.font_normal, wraplength=WINDOW_WIDTH - 4*PAD_X)
-        self.status_label.grid(row=2, column=0, columnspan=2, padx=PAD_X, pady=PAD_Y*2, sticky=tk.W)
+        self.status_label = ttk.Label(
+            content_frame, textvariable=self.status_var, font=self.font_normal, wraplength=WINDOW_WIDTH - 4 * PAD_X
+        )
+        self.status_label.grid(row=2, column=0, columnspan=2, padx=PAD_X, pady=PAD_Y * 2, sticky=tk.W)
         self.status_var.set("Status: Ready")
 
         # --- Action Buttons Frame ---
         button_frame = ttk.Frame(content_frame)
-        button_frame.grid(row=4, column=0, columnspan=2, pady=PAD_Y * 2, sticky=tk.S) # Use row 4
-        content_frame.rowconfigure(3, weight=1) # Allow space above buttons to expand
+        button_frame.grid(row=4, column=0, columnspan=2, pady=PAD_Y * 2, sticky=tk.S)  # Use row 4
+        content_frame.rowconfigure(3, weight=1)  # Allow space above buttons to expand
 
         # --- Send Email Button ---
         self.send_button = ttk.Button(button_frame, text="Send Verification Email", command=self.process_and_send_email)
@@ -213,13 +228,13 @@ class AdminPanel:
             match = re.search(r'\(ID: (\d+)\)$', selected_event_str)
             if match:
                 event_id = int(match.group(1))
-                return self.event_map.get(event_id) # Use map for O(1) lookup
+                return self.event_map.get(event_id)  # Use map for O(1) lookup
             else:
-                 print(f"Warning: Could not parse Event ID from '{selected_event_str}'")
-                 return None
+                print(f"Warning: Could not parse Event ID from '{selected_event_str}'")
+                return None
         except Exception as e:
-             print(f"Error parsing event selection: {e}")
-             return None
+            print(f"Error parsing event selection: {e}")
+            return None
 
     def _get_selected_user(self):
         # (This helper method remains the same)
@@ -254,21 +269,23 @@ class AdminPanel:
             self.status_var.set("Status: Error - User not selected.")
             return
         if not selected_user.mail_address:
-             messagebox.showerror("Error", f"Selected user '{selected_user.name}' does not have a valid email address.")
-             self.status_var.set(f"Status: Error - User '{selected_user.name}' missing email.")
-             return
+            messagebox.showerror("Error", f"Selected user '{selected_user.name}' does not have a valid email address.")
+            self.status_var.set(f"Status: Error - User '{selected_user.name}' missing email.")
+            return
 
-        confirm = messagebox.askyesno("Confirm Email",
-                                      f"Send verification email for event:\n"
-                                      f"'{selected_event.event_name}' (ID: {selected_event.identity})\n\n"
-                                      f"To user:\n"
-                                      f"'{selected_user.name}' ({selected_user.mail_address})?")
+        confirm = messagebox.askyesno(
+            "Confirm Email",
+            f"Send verification email for event:\n"
+            f"'{selected_event.event_name}' (ID: {selected_event.identity})\n\n"
+            f"To user:\n"
+            f"'{selected_user.name}' ({selected_user.mail_address})?",
+        )
         if not confirm:
             self.status_var.set("Status: Email sending cancelled.")
             return
 
         self.status_var.set(f"Status: Sending email to {selected_user.mail_address}...")
-        self.root.update_idletasks() # Force UI update
+        self.root.update_idletasks()  # Force UI update
 
         success = send_email(selected_user, selected_event)
         if success:
@@ -276,7 +293,7 @@ class AdminPanel:
             self.status_var.set(f"Status: Email sent successfully to {selected_user.name}.")
         else:
             # Error message shown by send_email
-             self.status_var.set("Status: Error sending email (see console/popup).")
+            self.status_var.set("Status: Error sending email (see console/popup).")
 
     def check_email_confirmations(self):
         """Connects to IMAP, checks replies, and inserts confirmed events into the main DB."""
@@ -298,7 +315,7 @@ class AdminPanel:
         insert_success = []
         insert_failures = []
         errors = []
-        processed_email_ids = set() # Keep track of emails processed in this run
+        processed_email_ids = set()  # Keep track of emails processed in this run
 
         try:
             mail = imaplib.IMAP4_SSL(imap_server)
@@ -316,9 +333,9 @@ class AdminPanel:
                 self.root.update_idletasks()
 
                 for email_id_bytes in email_ids:
-                    email_id_str = email_id_bytes.decode() # Use string ID for set
+                    email_id_str = email_id_bytes.decode()  # Use string ID for set
                     if email_id_str in processed_email_ids:
-                        continue # Skip if already processed in this run
+                        continue  # Skip if already processed in this run
 
                     status, msg_data = mail.fetch(email_id_bytes, "(RFC822)")
 
@@ -331,14 +348,26 @@ class AdminPanel:
                                 try:
                                     # Decode subject and sender safely
                                     subj_hdr = email.header.decode_header(msg["Subject"])[0]
-                                    subject = subj_hdr[0].decode(subj_hdr[1] or 'utf-8') if isinstance(subj_hdr[0], bytes) else subj_hdr[0]
+                                    subject = (
+                                        subj_hdr[0].decode(subj_hdr[1] or 'utf-8')
+                                        if isinstance(subj_hdr[0], bytes)
+                                        else subj_hdr[0]
+                                    )
 
                                     from_hdr = email.header.decode_header(msg.get("From"))[0]
-                                    from_address = from_hdr[0].decode(from_hdr[1] or 'utf-8') if isinstance(from_hdr[0], bytes) else from_hdr[0]
+                                    from_address = (
+                                        from_hdr[0].decode(from_hdr[1] or 'utf-8')
+                                        if isinstance(from_hdr[0], bytes)
+                                        else from_hdr[0]
+                                    )
                                     sender_email_match = re.search(r'<([^>]+)>', from_address)
-                                    sender_email_addr = sender_email_match.group(1) if sender_email_match else from_address
+                                    sender_email_addr = (
+                                        sender_email_match.group(1) if sender_email_match else from_address
+                                    )
 
-                                    print(f"Processing email ID {email_id_str} from: {sender_email_addr}, Subject: {subject}")
+                                    print(
+                                        f"Processing email ID {email_id_str} from: {sender_email_addr}, Subject: {subject}"
+                                    )
 
                                     # Extract Event ID
                                     event_id_match = re.search(r'\(Event ID: (\d+)\)', subject)
@@ -351,14 +380,16 @@ class AdminPanel:
 
                                     if not confirmed_event:
                                         print(f"  - Skipping: Event ID {event_id} not found in local admin event list.")
-                                        continue # Can't process if we don't know the event details
+                                        continue  # Can't process if we don't know the event details
 
                                     # Get body
                                     body = ""
                                     if msg.is_multipart():
                                         for part in msg.walk():
                                             # Find plain text part, ignore attachments
-                                            if part.get_content_type() == "text/plain" and "attachment" not in str(part.get("Content-Disposition")):
+                                            if part.get_content_type() == "text/plain" and "attachment" not in str(
+                                                part.get("Content-Disposition")
+                                            ):
                                                 payload = part.get_payload(decode=True)
                                                 charset = part.get_content_charset() or 'utf-8'
                                                 body = payload.decode(charset, errors='ignore')
@@ -379,7 +410,7 @@ class AdminPanel:
                                         # --- Try to insert into main database ---
                                         try:
                                             print(f"  - Inserting confirmed event {event_id} into main database...")
-                                            EventsDAL.insert_event(confirmed_event) # Use the fetched event object
+                                            EventsDAL.insert_event(confirmed_event)  # Use the fetched event object
                                             print(f"  - Successfully inserted event ID {event_id}.")
                                             insert_success.append(f"Event {event_display}")
                                             # Mark as read *after* successful processing
@@ -390,13 +421,18 @@ class AdminPanel:
                                                 print(f"  - Deleted event ID {event_id} from admin DB.")
                                             except Exception as del_e:
                                                 print(
-                                                    f"  - Failed to delete event ID {event_id} from admin DB: {del_e}")
+                                                    f"  - Failed to delete event ID {event_id} from admin DB: {del_e}"
+                                                )
                                         except sqlite3.IntegrityError as ie:
-                                             print(f"  - DB Integrity Error inserting event ID {event_id}: {ie}. Might already exist.")
-                                             insert_failures.append(f"Event {event_display} (Already exists or constraint violation)")
-                                             # Mark as read even if it fails due to already existing
-                                             mail.store(email_id_bytes, '+FLAGS', '\\Seen')
-                                             processed_email_ids.add(email_id_str)
+                                            print(
+                                                f"  - DB Integrity Error inserting event ID {event_id}: {ie}. Might already exist."
+                                            )
+                                            insert_failures.append(
+                                                f"Event {event_display} (Already exists or constraint violation)"
+                                            )
+                                            # Mark as read even if it fails due to already existing
+                                            mail.store(email_id_bytes, '+FLAGS', '\\Seen')
+                                            processed_email_ids.add(email_id_str)
                                         except Exception as db_e:
                                             print(f"  - FAILED to insert event ID {event_id} into main DB: {db_e}")
                                             insert_failures.append(f"Event {event_display} (DB Error: {db_e})")
@@ -408,19 +444,21 @@ class AdminPanel:
                                         denials_processed.append(f"Event {event_display} by {sender_email_addr}")
                                         # TODO: Optional - Implement deletion from admin_db if needed
                                         try:
-                                          AdminDAL.delete_event(event_id)
-                                          print(f"  - Deleted event ID {event_id} from admin DB.")
+                                            AdminDAL.delete_event(event_id)
+                                            print(f"  - Deleted event ID {event_id} from admin DB.")
                                         except Exception as del_e:
-                                          print(f"  - Failed to delete event ID {event_id} from admin DB: {del_e}")
+                                            print(f"  - Failed to delete event ID {event_id} from admin DB: {del_e}")
 
                                         # Mark denied email as read
                                         mail.store(email_id_bytes, '+FLAGS', '\\Seen')
                                         processed_email_ids.add(email_id_str)
                                     else:
-                                         print(f"  - No clear confirm/deny keyword found for Event ID {event_id}. Marking as read.")
-                                         # Mark as read to avoid re-processing ambiguous emails
-                                         mail.store(email_id_bytes, '+FLAGS', '\\Seen')
-                                         processed_email_ids.add(email_id_str)
+                                        print(
+                                            f"  - No clear confirm/deny keyword found for Event ID {event_id}. Marking as read."
+                                        )
+                                        # Mark as read to avoid re-processing ambiguous emails
+                                        mail.store(email_id_bytes, '+FLAGS', '\\Seen')
+                                        processed_email_ids.add(email_id_str)
 
                                 except Exception as parse_e:
                                     print(f"  - Error parsing email ID {email_id_str}: {parse_e}")
@@ -441,18 +479,36 @@ class AdminPanel:
         # --- Display Comprehensive Results ---
         result_message = "Confirmation Check Complete:\n\n"
         if insert_success:
-            result_message += "**Successfully Confirmed & Added to DB:**\n" + "\n".join(f"- {s}" for s in insert_success) + "\n\n"
+            result_message += (
+                "**Successfully Confirmed & Added to DB:**\n" + "\n".join(f"- {s}" for s in insert_success) + "\n\n"
+            )
         if denials_processed:
             result_message += "**Denied (Not Added):**\n" + "\n".join(f"- {d}" for d in denials_processed) + "\n\n"
         if insert_failures:
-             result_message += "**Confirmation Failed (DB Issues):**\n" + "\n".join(f"- {f}" for f in insert_failures) + "\n\n"
+            result_message += (
+                "**Confirmation Failed (DB Issues):**\n" + "\n".join(f"- {f}" for f in insert_failures) + "\n\n"
+            )
         # Report confirmations found but not necessarily inserted (if errors occurred)
-        unprocessed_confirmations = [c for c in confirmations_processed if not any(s in c for s in insert_success) and not any(f in c for f in insert_failures)]
+        unprocessed_confirmations = [
+            c
+            for c in confirmations_processed
+            if not any(s in c for s in insert_success) and not any(f in c for f in insert_failures)
+        ]
         if unprocessed_confirmations:
-             result_message += "**Confirmations Found (Not Added due to errors):**\n" + "\n".join(f"- {uc}" for uc in unprocessed_confirmations) + "\n\n"
+            result_message += (
+                "**Confirmations Found (Not Added due to errors):**\n"
+                + "\n".join(f"- {uc}" for uc in unprocessed_confirmations)
+                + "\n\n"
+            )
 
-        if not insert_success and not denials_processed and not insert_failures and not unprocessed_confirmations and not errors:
-             result_message += "No new relevant confirmation/denial emails found.\n\n"
+        if (
+            not insert_success
+            and not denials_processed
+            and not insert_failures
+            and not unprocessed_confirmations
+            and not errors
+        ):
+            result_message += "No new relevant confirmation/denial emails found.\n\n"
         if errors:
             result_message += "**Processing Errors:**\n" + "\n".join(f"- {err}" for err in errors)
 
@@ -473,31 +529,38 @@ if __name__ == "__main__":
         all_users = EventsDAL.get_all_users()
         # --- End DAL usage ---
 
-        if admin_events is None: # DAL methods should return [] on error/no data, not None ideally
-             print("Warning: AdminDAL.fetch_all_coordinates returned None, treating as empty list.")
-             admin_events = []
+        if admin_events is None:  # DAL methods should return [] on error/no data, not None ideally
+            print("Warning: AdminDAL.fetch_all_coordinates returned None, treating as empty list.")
+            admin_events = []
         if all_users is None:
-             print("Warning: EventsDAL.get_all_users returned None, treating as empty list.")
-             all_users = []
+            print("Warning: EventsDAL.get_all_users returned None, treating as empty list.")
+            all_users = []
 
         print(f"Found {len(admin_events)} events in admin DB.")
         print(f"Found {len(all_users)} users in main DB.")
 
     except sqlite3.OperationalError as db_e:
-         print(f"Fatal DB Error: {db_e}. Does the table/database exist or is it locked?")
-         try:
-             root_err = tk.Tk(); root_err.withdraw()
-             messagebox.showerror("Database Error", f"Could not read from database.\nError: {db_e}\n\nCheck file paths and table structures.\nApplication will exit.")
-             root_err.destroy()
-         except tk.TclError: pass
-         exit()
+        print(f"Fatal DB Error: {db_e}. Does the table/database exist or is it locked?")
+        try:
+            root_err = tk.Tk()
+            root_err.withdraw()
+            messagebox.showerror(
+                "Database Error",
+                f"Could not read from database.\nError: {db_e}\n\nCheck file paths and table structures.\nApplication will exit.",
+            )
+            root_err.destroy()
+        except tk.TclError:
+            pass
+        exit()
     except Exception as e:
         print(f"Fatal Error: Could not fetch initial data: {e}")
         try:
-            root_err = tk.Tk(); root_err.withdraw()
+            root_err = tk.Tk()
+            root_err.withdraw()
             messagebox.showerror("Data Error", f"Could not fetch required data.\n{e}\n\nApplication will exit.")
             root_err.destroy()
-        except tk.TclError: pass
+        except tk.TclError:
+            pass
         exit()
 
     # Setup Tkinter root window

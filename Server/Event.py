@@ -10,13 +10,13 @@ class Risk(Enum):
 
 @dataclass
 class Event:
-    identity: int
     event_name: str
     longitude: float
     latitude: float
     risk: Risk
     region: str
     city: str
+    identity: int = -1
 
     def to_dict(self):
         return {
@@ -30,8 +30,28 @@ class Event:
         }
 
     def print_event(self):
-        print("id: ", self.identity, ", ", "name: ", self.event_name, ", ", "longitude: ", self.longitude, ", ", "latitude: ", self.latitude, ", ", "region: ", self.region, ", ",
-              "city: ", self.city, ", ", "risk: ", self.risk)
+        print(
+            "id: ",
+            self.identity,
+            ", ",
+            "name: ",
+            self.event_name,
+            ", ",
+            "longitude: ",
+            self.longitude,
+            ", ",
+            "latitude: ",
+            self.latitude,
+            ", ",
+            "region: ",
+            self.region,
+            ", ",
+            "city: ",
+            self.city,
+            ", ",
+            "risk: ",
+            self.risk,
+        )
 
     @classmethod
     def from_dict(cls, data: dict):

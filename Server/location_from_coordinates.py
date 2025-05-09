@@ -1,5 +1,5 @@
-from geopy.geocoders import Nominatim
 from Event import Event
+from geopy.geocoders import Nominatim
 
 
 def get_location_from_coordinates(event: Event) -> tuple[str, str]:

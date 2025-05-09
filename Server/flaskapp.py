@@ -1,22 +1,21 @@
-import socket
 import json
-from typing import Final
-from flask import Flask, request, render_template_string
-import folium
-from Event import Event, Risk
-from events_db import EventsDAL
-from flask_login import LoginManager
-from flask import request, redirect, url_for, render_template, flash
-from flask_login import login_user, logout_user, login_required
-from User import User
 import secrets
+import socket
+from typing import Final
+
+import folium
+from dal import EveMapDAL
+from Event import Event, Risk
+from flask import Flask, flash, redirect, render_template, request, url_for
+from flask_login import LoginManager, login_required, login_user, logout_user
 from geopy.geocoders import Nominatim
+from User import User
 
+HOST_IP: Final[str] = '0.0.0.0'
+HOST_SOCKET_PORT: Final[int] = 6000
+HOST_FLASK_PORT: Final[int] = 5000
 
-SERVER_IP: Final[str] = '127.0.0.1'
-SERVER_PORT: Final[int] = 6000
-
-EventsDAL.start_cleanup_thread()
+EveMapDAL.start_cleanup_thread()
 
 app = Flask(__name__)
 
@@ -26,11 +25,11 @@ login_manager.login_view = "login"
 login_manager.init_app(app)
 
 
-
 def add_all_markers_to_ui(events: list[Event], m):
     for event in events:
         print(
-            f"Adding marker: {event.event_name}, Lat: {event.latitude}, Long: {event.longitude}, Risk: {event.risk}")  # Debugging
+            f"Adding marker: {event.event_name}, Lat: {event.latitude}, Long: {event.longitude}, Risk: {event.risk}"
+        )  # Debugging
         if event.risk == 0:
             icon_color = 'red'
         elif event.risk == 1:
@@ -54,21 +53,25 @@ def send_marker(event_json: dict):
 
     try:
         client_socket = socket.socket()  # instantiate
-        client_socket.connect((SERVER_IP, SERVER_PORT))  # connect to the server
+        client_socket.connect((HOST_IP, HOST_SOCKET_PORT))  # connect to the server
         if event.risk == Risk.DANGER:
             client_socket.send(json.dumps(event_json).encode('utf-8'))  # send message
         else:
-            EventsDAL.insert_event(event)
+            EveMapDAL.insert_event(event)
 
     except Exception as ex:
         print(f"Error sending data: {ex}")
 
     return "Sent successfully"
 
+
 app.secret_key = secrets.token_hex(32)
+
+
 @login_manager.user_loader
 def load_user(user_id):
-    return EventsDAL.get_user_by_email(user_id)  # Should return a User object or None
+    return EveMapDAL.get_user_by_email(user_id)  # Should return a User object or None
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -76,7 +79,7 @@ def login():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        user = EventsDAL.get_user_by_email(email)
+        user = EveMapDAL.get_user_by_email(email)
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for("map_with_markers"))
@@ -84,16 +87,17 @@ def login():
             flash("Invalid email or password.")
     return render_template("login.html")
 
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
 
+
 @app.route("/report", methods=["GET", "POST"])
 @login_required
-def report_event():
-    ...
+def report_event(): ...
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -107,12 +111,13 @@ def signup():
         state = request.form["state"]
 
         # Check if user already exists
-        existing_user = EventsDAL.get_user_by_email(email)
+        existing_user = EveMapDAL.get_user_by_email(email)
         if existing_user:
             return render_template("signup_error.html", email=email)
 
         # If new user, proceed to create
         from geopy.geocoders import Nominatim
+
         geolocator = Nominatim(user_agent="signup_app")
         location = geolocator.geocode(f"{street}, {city}, {state}, Israel")
         if location is None:
@@ -123,10 +128,10 @@ def signup():
             name=name,
             mail_address=email,
             password=password,
-            home_address={"longitude": location.longitude, "latitude": location.latitude}
+            home_address={"longitude": location.longitude, "latitude": location.latitude},
         )
 
-        EventsDAL.insert_user(user)
+        EveMapDAL.insert_user(user)
         flash("Account created successfully! Please log in.")
         return redirect(url_for("login"))
 
@@ -139,7 +144,7 @@ def get_all_markers() -> list[dict]:
     region = request.args.get("region")
     risk = request.args.get("risk", type=int)
 
-    all_markers = EventsDAL.fetch_all_coordinates(city=city, region=region, risk=risk)
+    all_markers = EveMapDAL.fetch_all_coordinates_from_events(city=city, region=region, risk=risk)
     return [m.to_dict() for m in all_markers]
 
 
@@ -153,27 +158,27 @@ def get_marker():
 @login_required
 def map_with_markers():
     m = folium.Map(location=[32.0, 35.0], zoom_start=8)
-    events = EventsDAL.fetch_all_coordinates()
+    events = EveMapDAL.fetch_all_coordinates_from_events()
     add_all_markers_to_ui(events, m)
     map_html = m._repr_html_()
 
-    cities = EventsDAL.get_unique_cities()
-    regions = EventsDAL.get_unique_regions()
+    cities = EveMapDAL.get_unique_cities()
+    regions = EveMapDAL.get_unique_regions()
 
     return render_template("map_view.html", map_html=map_html, cities=cities, regions=regions)
+
 
 @app.route("/submit")
 def submit_event():
     return render_template("submit_event.html")
 
+
 @app.route("/api/filters")
 def get_filter_options():
-    cities = EventsDAL.get_unique_cities()
-    regions = EventsDAL.get_unique_regions()
+    cities = EveMapDAL.get_unique_cities()
+    regions = EveMapDAL.get_unique_regions()
     return {"cities": cities, "regions": regions}
 
 
-
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host=HOST_IP, port=HOST_FLASK_PORT, debug=True)

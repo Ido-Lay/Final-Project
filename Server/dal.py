@@ -1,26 +1,18 @@
 import sqlite3
-from datetime import datetime, timedelta
 import threading
 import time
+from datetime import datetime, timedelta
 from typing import Final, Optional
+
 import schedule
-import json
 from Event import Event
 from location_from_coordinates import get_location_from_coordinates
 from User import User
 
-DATABASE_FILENAME: Final[str] = 'final_project.db'  # TODO change
+DATABASE_FILENAME: Final[str] = 'evemap.db'
 
 
-class EventsDAL:
-    @staticmethod
-    def adapt_datetime(dt: datetime) -> str:
-        return dt.isoformat()
-
-    @staticmethod
-    def convert_datetime(dt_str: bytes) -> datetime:
-        return datetime.fromisoformat(dt_str.decode("utf-8"))
-
+class EveMapDAL:
     @staticmethod
     def create_events_table(cursor):
         event_table = """CREATE TABLE IF NOT EXISTS EVENTS (
@@ -48,18 +40,36 @@ class EventsDAL:
         cursor.execute(user_table)
 
     @staticmethod
+    def create_admin_events_table(cursor):
+        event_table = """ CREATE TABLE IF NOT EXISTS ADMIN_EVENTS (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            event_name TEXT,
+                            longitude REAL,
+                            latitude REAL,
+                            risk INT,
+                            region TEXT,
+                            city TEXT,
+                            created_at DATETIME
+                        ); """
+        cursor.execute(event_table)
+
+    @staticmethod
     def create_database():
         connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
 
-        EventsDAL.create_events_table(cursor)
-        EventsDAL.create_users_table(cursor)
+        EveMapDAL.create_events_table(cursor)
+        EveMapDAL.create_users_table(cursor)
+        EveMapDAL.create_admin_events_table(cursor)
 
         connection.commit()
         connection.close()
 
     @staticmethod
-    def insert_event(event: Event):
+    def insert_event_to_table(table_name: str, event: Event):
+        if not (table_name.isalpha() or '_' in table_name):
+            return
+
         connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
         region, city = get_location_from_coordinates(event)
@@ -68,16 +78,29 @@ class EventsDAL:
             print(f"Warning: Could not fetch location info for event {event.event_name}")
 
         # Debugging: Print the data before insertion
-        print(f"Inserting event: "
-              f"{event.identity}, {event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}")
+        print(
+            f"Inserting event: "
+            f"{event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}"
+        )
 
-        cursor.execute("""
-            INSERT INTO EVENTS (event_name, longitude, latitude, risk, region, city, created_at)
+        cursor.execute(
+            f"""
+            INSERT INTO {table_name} (event_name, longitude, latitude, risk, region, city, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (event.event_name, event.longitude, event.latitude, event.risk.value, region, city, datetime.now()))
+        """,
+            (event.event_name, event.longitude, event.latitude, event.risk.value, region, city, datetime.now()),
+        )
 
         connection.commit()
         connection.close()
+
+    @staticmethod
+    def insert_event(event: Event):
+        EveMapDAL.insert_event_to_table('EVENTS', event)
+
+    @staticmethod
+    def insert_admin_event(event: Event):
+        EveMapDAL.insert_event_to_table('ADMIN_EVENTS', event)
 
     @staticmethod
     def insert_user(user: User):
@@ -85,19 +108,15 @@ class EventsDAL:
         c = conn.cursor()
 
         # Safely get coordinates
-        longitude = user.home_address.get("longitude")
-        latitude = user.home_address.get("latitude")
+        longitude, latitude = user.get_longitude_and_latitude()
 
-        c.execute('''
+        c.execute(
+            '''
             INSERT INTO USERS (name, mail_address, password_hash, home_long, home_lat)
             VALUES (?, ?, ?, ?, ?)
-        ''', (
-            user.name,
-            user.mail_address,
-            user.password_hash,
-            longitude,
-            latitude
-        ))
+        ''',
+            (user.name, user.mail_address, user.password_hash, longitude, latitude),
+        )
 
         conn.commit()
         conn.close()
@@ -107,14 +126,19 @@ class EventsDAL:
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS WHERE mail_address = ?", (email,))
+            "SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS WHERE mail_address = ?", (email,)
+        )
         row = cursor.fetchone()
         conn.close()
         if row:
             name, email, password_hash, long, lat = row
-            return User(name=name, mail_address=email, password=password_hash,
-                        password_is_hashed=True,
-                        home_address={"longitude": long, "latitude": lat})
+            return User(
+                name=name,
+                mail_address=email,
+                password=password_hash,
+                password_is_hashed=True,
+                home_address={"longitude": long, "latitude": lat},
+            )
         return None
 
     @staticmethod
@@ -130,8 +154,7 @@ class EventsDAL:
             name, email, password_hash, long, lat = row
             row_data = {
                 'name': name,
-                'home_address': {"home_long": long,
-                                 "home_lat": lat},
+                'home_address': {"home_long": long, "home_lat": lat},
                 'mail_address': email,
                 'password': password_hash,
             }
@@ -156,30 +179,30 @@ class EventsDAL:
 
     @staticmethod
     def run_scheduler():
-        schedule.every(10).minutes.do(EventsDAL.cleanup_database)
+        schedule.every(1).minutes.do(EveMapDAL.cleanup_database)
         while True:
             schedule.run_pending()
             time.sleep(1)
 
     @staticmethod
     def start_cleanup_thread():
-        cleanup_thread = threading.Thread(target=EventsDAL.run_scheduler, daemon=True)
+        cleanup_thread = threading.Thread(target=EveMapDAL.run_scheduler, daemon=True)
         cleanup_thread.start()
 
     @staticmethod
-    def fetch_all_coordinates(city=None, region=None, risk=None) -> list[Event]:
+    def fetch_all_coordinates_from_table(table_name: str, city=None, region=None, risk=None) -> list[Event]:
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
 
         # Modify the query to include the identity field
-        query = "SELECT id, event_name, latitude, longitude, risk, city, region FROM events WHERE 1=1"
+        query = f"SELECT id, event_name, latitude, longitude, risk, city, region FROM {table_name} WHERE 1=1"
         params = []
 
-        if city:
+        if city is not None:
             query += " AND city = ?"
             params.append(city)
 
-        if region:
+        if region is not None:
             query += " AND region = ?"
             params.append(region)
 
@@ -187,25 +210,40 @@ class EventsDAL:
             query += " AND risk = ?"
             params.append(risk)
 
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-        conn.close()
+        try:
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Error fetching admin events: {e}")
+            rows = []  # Return empty list on error
+        finally:
+            conn.close()
 
         events = []
         for row in rows:
-            # Now create Event object with identity
-            event = Event(
-                identity=row[0],  # Add the identity here
-                event_name=row[1],
-                latitude=row[2],
-                longitude=row[3],
-                risk=row[4],
-                city=row[5],
-                region=row[6]
-            )
-            events.append(event)
+            try:
+                event = Event(
+                    identity=row[0],
+                    event_name=row[1],
+                    latitude=row[2],
+                    longitude=row[3],
+                    risk=row[4],
+                    city=row[5] if row[5] else "Unknown",
+                    region=row[6] if row[6] else "Unknown",
+                )
+                events.append(event)
+            except Exception as e:
+                print(f"Error processing row {row}: {e}")  # Catch errors during Event object creation
 
         return events
+
+    @staticmethod
+    def fetch_all_coordinates_from_events(city=None, region=None, risk=None):
+        return EveMapDAL.fetch_all_coordinates_from_table('EVENTS', city, region, risk)
+
+    @staticmethod
+    def fetch_all_coordinates_from_admin_events(city=None, region=None, risk=None):
+        return EveMapDAL.fetch_all_coordinates_from_table('ADMIN_EVENTS', city, region, risk)
 
     @staticmethod
     def get_unique_cities():
@@ -224,3 +262,22 @@ class EventsDAL:
         regions = [row[0] for row in cursor.fetchall()]
         conn.close()
         return regions
+
+    @staticmethod
+    def delete_event(db_id: int) -> bool:
+        connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
+        cursor = connection.cursor()
+        try:
+            with sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM ADMIN_EVENTS WHERE id = ?", (db_id,))
+            if cursor.rowcount == 0:
+                print(f"Warning: No event found with id {db_id}. No rows deleted.")
+                return False
+            else:
+                print(f"Successfully deleted event with id {db_id}.")
+                return True
+
+        except sqlite3.Error as e:
+            print(f"Database error occurred: {e}")
+            return False
