@@ -48,78 +48,9 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
 
-# Function to calculate distance (remains the same)
-def haversine(longitude1: float, latitude1: float, longitude2: float, latitude2: float):
-    R = 6371
-    longitude1, latitude1, longitude2, latitude2 = map(radians, [longitude1, latitude1, longitude2, latitude2])
-    dlongitude = longitude2 - longitude1
-    dlatitude = latitude2 - latitude1
-    a = sin(dlatitude / 2) ** 2 + cos(latitude1) * cos(latitude2) * sin(dlongitude / 2) ** 2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return R * c * 1000
-
-
 # Function to send emails (remains the same)
 def send_email(user: User, event: Event):
-    sender_email = SENDER_EMAIL
-    sender_password = SENDER_PASSWORD
-
-    if not sender_password:
-        print("ERROR: Sender password not set.")
-        messagebox.showerror("Configuration Error", "Email password is not configured.")
-        return False
-
-    if not user or not user.mail_address:
-        print(f"Error: Invalid user or missing email for: {user.name if user else 'Unknown'}")
-        messagebox.showerror(
-            "User Error", f"Invalid user data or missing email for: {user.name if user else 'Unknown'}"
-        )
-        return False
-
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = user.mail_address
-    msg['Subject'] = f"Action Needed: Confirm Event '{event.event_name}' (Event ID: {event.identity})"  # Includes ID
-
-    body = f"""
-    Dear {user.name},
-
-    Our system received a report about an event occurring potentially near your location:
-
-    Event Name: {event.event_name} (ID: {event.identity})
-    Reported Location: {event.city}, {event.region}
-    Coordinates: ({event.latitude:.4f}, {event.longitude:.4f})
-
-    Could you please help us verify if this event is accurately reported?
-
-    * To CONFIRM this event is happening, please reply to this email with the word "confirm" in the body.
-    * To DENY this report (if it's incorrect), please reply with the word "deny" in the body.
-
-    Your confirmation helps keep our information up-to-date.
-
-    Thank you for your help!
-
-    Best regards,
-    The Event Monitoring Team
-    """
-    msg.attach(MIMEText(body, 'plain'))
-
-    try:
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, user.mail_address, msg.as_string())
-        server.quit()
-        print(f"Successfully sent verification email to {user.mail_address} for event ID {event.identity}")
-        return True
-    except smtplib.SMTPAuthenticationError:
-        print("SMTP Authentication Error: Check email/password (use App Password for Gmail).")
-        messagebox.showerror("Email Error", "Authentication failed. Check credentials (use App Password for Gmail).")
-        return False
-    except Exception as e:
-        print(f"Failed to send email to {user.mail_address}: {e}")
-        messagebox.showerror("Email Error", f"Failed to send email:\n{e}")
-        return False
+    ...
 
 
 # Tkinter UI for admin panel
@@ -164,13 +95,13 @@ class AdminPanel:
         event_label.grid(row=0, column=0, padx=PAD_X, pady=PAD_Y, sticky=tk.W)
 
         self.event_var = tk.StringVar()
-        event_display_list = [f"{e.event_name} (ID: {e.identity})" for e in self.events]
+        event_display_list = [f"{e.event_name}" for e in self.events]
         self.event_combo = ttk.Combobox(
             content_frame, textvariable=self.event_var, values=event_display_list, state='readonly', width=40
         )
         if not self.events:
-            self.event_combo['values'] = ["No events found in admin DB"]
-            self.event_var.set("No events found in admin DB")
+            self.event_combo['values'] = ["No events to approve"]
+            self.event_var.set("No events to approve")
             self.event_combo.config(state='disabled')
         else:
             self.event_var.set(event_display_list[0] if event_display_list else "Select an event")
@@ -288,6 +219,7 @@ class AdminPanel:
         self.root.update_idletasks()  # Force UI update
 
         success = send_email(selected_user, selected_event)
+
         if success:
             messagebox.showinfo("Success", f"Verification email successfully sent to {selected_user.name}")
             self.status_var.set(f"Status: Email sent successfully to {selected_user.name}.")
@@ -403,7 +335,7 @@ class AdminPanel:
                                     event_display = f"'{confirmed_event.event_name}' (ID: {event_id})"
 
                                     # --- Confirmation Logic ---
-                                    if "confirm" in body_lower:
+                                    if ("confirm" in body_lower) or ("Confirm" in body_lower):
                                         print(f"  - CONFIRMED: Event {event_display} by {sender_email_addr}")
                                         confirmations_processed.append(f"Event {event_display} by {sender_email_addr}")
 
@@ -439,7 +371,7 @@ class AdminPanel:
                                             # Do not mark as read if DB insertion failed unexpectedly
 
                                     # --- Denial Logic ---
-                                    elif "deny" in body_lower or "denied" in body_lower:
+                                    elif "deny" in body_lower or "denied" in body_lower or "Denied" in body_lower or "Deny" in body_lower:
                                         print(f"  - DENIED: Event {event_display} by {sender_email_addr}")
                                         denials_processed.append(f"Event {event_display} by {sender_email_addr}")
                                         # TODO: Optional - Implement deletion from admin_db if needed
@@ -566,10 +498,4 @@ if __name__ == "__main__":
     # Setup Tkinter root window
     root = tk.Tk()
     app = AdminPanel(root, admin_events, all_users)
-    # Optional: Start cleanup thread from EventsDAL if desired
-    # try:
-    #     EventsDAL.start_cleanup_thread()
-    #     print("Started background DB cleanup thread.")
-    # except Exception as e:
-    #     print(f"Warning: Could not start cleanup thread: {e}")
     root.mainloop()
