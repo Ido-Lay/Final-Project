@@ -9,8 +9,13 @@ import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from math import radians, cos, sin, sqrt, atan2
-import sqlite3 # Import for specific error handling
-from datetime import datetime # Needed for error messages potentially
+import sqlite3  # Import for specific error handling
+from datetime import datetime  # Needed for error messages potentially
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Import your actual classes and functions ---
 try:
@@ -37,8 +42,8 @@ FONT_LABEL_SIZE = 12
 FONT_BUTTON_SIZE = 11
 
 # --- Email Credentials ---
-SENDER_EMAIL = "ido.eliavgames@gmail.com"
-SENDER_PASSWORD = "" # <--- USE YOUR GMAIL APP PASSWORD HERE
+SENDER_EMAIL = os.getenv("GMAIL_APP_MAIl")
+SENDER_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 IMAP_SERVER = "imap.gmail.com"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
