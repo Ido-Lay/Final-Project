@@ -10,13 +10,13 @@ class Risk(Enum):
 
 @dataclass
 class Event:
-    identity: int
     event_name: str
     longitude: float
     latitude: float
     risk: Risk
     region: str
     city: str
+    identity: int = -1
 
     def to_dict(self):
         return {

@@ -69,3 +69,8 @@ class User:
             return location.latitude, location.longitude
         else:
             return None, None
+
+    def get_longitude_and_latitude(self):
+        longitude = self.home_address.get("longitude")
+        latitude = self.home_address.get("latitude")
+        return longitude, latitude

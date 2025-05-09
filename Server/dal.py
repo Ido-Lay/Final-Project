@@ -67,7 +67,7 @@ class EveMapDAL:
 
     @staticmethod
     def insert_event_to_table(table_name: str, event: Event):
-        if not table_name.isalpha():
+        if not (table_name.isalpha() or '_' in table_name):
             return
 
         connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
@@ -79,7 +79,7 @@ class EveMapDAL:
 
         # Debugging: Print the data before insertion
         print(f"Inserting event: "
-              f"{event.identity}, {event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}")
+              f"{event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}")
 
         cursor.execute(f"""
             INSERT INTO {table_name} (event_name, longitude, latitude, risk, region, city, created_at)
