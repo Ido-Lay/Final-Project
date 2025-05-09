@@ -1,14 +1,11 @@
-import sqlite3
-from datetime import datetime, timedelta  # Not directly used in this version of helper, but good to keep if expanding
 import os
-from typing import Final  # Not directly used in this version of helper
+import sqlite3
 
+# Import from the refactored dal.py
+from dal import DATABASE_FILENAME, EveMapDAL  # Import the single DAL and the database filename
 # Assuming Event.py, User.py are in the same directory or accessible
 from Event import Event, Risk
 from User import User
-
-# Import from the refactored dal.py
-from dal import EveMapDAL, DATABASE_FILENAME  # Import the single DAL and the database filename
 
 
 # Mock function for get_location_from_coordinates.

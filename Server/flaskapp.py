@@ -1,16 +1,15 @@
-import socket
 import json
-from typing import Final
-from flask import Flask, request, render_template_string
-import folium
-from Event import Event, Risk
-from dal import EveMapDAL
-from flask_login import LoginManager
-from flask import request, redirect, url_for, render_template, flash
-from flask_login import login_user, logout_user, login_required
-from User import User
 import secrets
+import socket
+from typing import Final
+
+import folium
+from dal import EveMapDAL
+from Event import Event, Risk
+from flask import Flask, flash, redirect, render_template, request, url_for
+from flask_login import LoginManager, login_required, login_user, logout_user
 from geopy.geocoders import Nominatim
+from User import User
 
 HOST_IP: Final[str] = '0.0.0.0'
 HOST_SOCKET_PORT: Final[int] = 6000

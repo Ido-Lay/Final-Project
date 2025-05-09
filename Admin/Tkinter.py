@@ -1,17 +1,15 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
-from tkinter import font as tkFont
-import smtplib
-import imaplib
 import email
-import re
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from math import radians, cos, sin, sqrt, atan2
-import sqlite3  # Import for specific error handling
-from datetime import datetime  # Needed for error messages potentially
+import imaplib
 import os
+import re
+import smtplib
+import sqlite3  # Import for specific error handling
+import tkinter as tk
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from math import atan2, cos, radians, sin, sqrt
+from tkinter import font as tkFont
+from tkinter import messagebox, ttk
 
 from dotenv import load_dotenv
 
@@ -19,10 +17,10 @@ load_dotenv()
 
 # --- Import your actual classes and functions ---
 try:
-    from Event import Event, Risk  # Assuming Risk enum is in Event.py
-    from User import User
     from admin_db import AdminDAL  # From admin_db.py
-    from events_db import EventsDAL  # From events_db.py
+    from Event import Event, Risk  # Assuming Risk enum is in Event.py
+    from events_db import EventsDAL  # From dal.py
+    from User import User
 
     # from location_from_coordinates import get_location_from_coordinates # Needed by DALs, not directly here
 except ImportError as e:

@@ -1,10 +1,10 @@
 import sqlite3
-from datetime import datetime, timedelta
 import threading
 import time
+from datetime import datetime, timedelta
 from typing import Final, Optional
+
 import schedule
-import json
 from Event import Event
 from location_from_coordinates import get_location_from_coordinates
 from User import User
