@@ -6,9 +6,11 @@ class MessageType(Enum):
     SEND_MAIL = 0
     CHECK_MAIL = 1
     DELETE_EVENT = 2
-    INSERT_EVENT = 3
-    FETCH_EVENTS = 4
-    FETCH_USERS = 5
+    DELETE_ADMIN_EVENT = 3
+    INSERT_EVENT = 4
+    INSERT_ADMIN_EVENT = 5
+    FETCH_EVENTS = 6
+    FETCH_USERS = 7
 
 
 class PacketType(Enum):

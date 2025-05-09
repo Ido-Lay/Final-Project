@@ -66,9 +66,9 @@ class EveMapDAL:
         connection.close()
 
     @staticmethod
-    def insert_event_to_table(table_name: str, event: Event):
+    def insert_event_to_table(table_name: str, event: Event) -> bool:
         if not (table_name.isalpha() or '_' in table_name):
-            return
+            return False
 
         connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
@@ -94,13 +94,15 @@ class EveMapDAL:
         connection.commit()
         connection.close()
 
-    @staticmethod
-    def insert_event(event: Event):
-        EveMapDAL.insert_event_to_table('EVENTS', event)
+        return True
 
     @staticmethod
-    def insert_admin_event(event: Event):
-        EveMapDAL.insert_event_to_table('ADMIN_EVENTS', event)
+    def insert_event(event: Event) -> bool:
+        return EveMapDAL.insert_event_to_table('EVENTS', event)
+
+    @staticmethod
+    def insert_admin_event(event: Event) -> bool:
+        return EveMapDAL.insert_event_to_table('ADMIN_EVENTS', event)
 
     @staticmethod
     def insert_user(user: User):
@@ -264,13 +266,11 @@ class EveMapDAL:
         return regions
 
     @staticmethod
-    def delete_event(db_id: int) -> bool:
-        connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
-        cursor = connection.cursor()
+    def delete_event_from_table(db_id: int, table_name: str) -> bool:
         try:
             with sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
                 cursor = conn.cursor()
-                cursor.execute("DELETE FROM ADMIN_EVENTS WHERE id = ?", (db_id,))
+                cursor.execute(f"DELETE FROM {table_name} WHERE id = ?", (db_id,))
             if cursor.rowcount == 0:
                 print(f"Warning: No event found with id {db_id}. No rows deleted.")
                 return False
@@ -281,3 +281,11 @@ class EveMapDAL:
         except sqlite3.Error as e:
             print(f"Database error occurred: {e}")
             return False
+
+    @staticmethod
+    def delete_event(db_id: int) -> bool:
+        return EveMapDAL.delete_event_from_table(db_id, 'EVENTS')
+
+    @staticmethod
+    def delete_admin_event(db_id: int) -> bool:
+        return EveMapDAL.delete_event_from_table(db_id, 'ADMIN_EVENTS')
