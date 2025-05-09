@@ -1,9 +1,16 @@
 import hashlib
 from geopy.geocoders import Nominatim
 
+
 class User:
-    def __init__(self, name: str, home_address: dict[str, float] = None, mail_address: str = None,
-                 password: str = None, password_is_hashed: bool = False):
+    def __init__(
+        self,
+        name: str,
+        home_address: dict[str, float] = None,
+        mail_address: str = None,
+        password: str = None,
+        password_is_hashed: bool = False,
+    ):
         self.name = name
         self.home_address = home_address if home_address is not None else {"longitude": None, "latitude": None}
         self.mail_address = mail_address
@@ -16,7 +23,6 @@ class User:
         if home_address and all(k in home_address for k in ("street", "city", "state")):
             lat, lon = self.get_coordinates_from_address(home_address)
             self.home_address = {"latitude": lat, "longitude": lon}
-
 
     def _hash_password(self, password: str) -> str:
         """Hashes the password using SHA-256 for security."""

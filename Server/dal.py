@@ -78,13 +78,18 @@ class EveMapDAL:
             print(f"Warning: Could not fetch location info for event {event.event_name}")
 
         # Debugging: Print the data before insertion
-        print(f"Inserting event: "
-              f"{event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}")
+        print(
+            f"Inserting event: "
+            f"{event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}"
+        )
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             INSERT INTO {table_name} (event_name, longitude, latitude, risk, region, city, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (event.event_name, event.longitude, event.latitude, event.risk.value, region, city, datetime.now()))
+        """,
+            (event.event_name, event.longitude, event.latitude, event.risk.value, region, city, datetime.now()),
+        )
 
         connection.commit()
         connection.close()
@@ -105,10 +110,13 @@ class EveMapDAL:
         # Safely get coordinates
         longitude, latitude = user.get_longitude_and_latitude()
 
-        c.execute('''
+        c.execute(
+            '''
             INSERT INTO USERS (name, mail_address, password_hash, home_long, home_lat)
             VALUES (?, ?, ?, ?, ?)
-        ''', (user.name, user.mail_address, user.password_hash, longitude, latitude))
+        ''',
+            (user.name, user.mail_address, user.password_hash, longitude, latitude),
+        )
 
         conn.commit()
         conn.close()
@@ -118,14 +126,19 @@ class EveMapDAL:
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS WHERE mail_address = ?", (email,))
+            "SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS WHERE mail_address = ?", (email,)
+        )
         row = cursor.fetchone()
         conn.close()
         if row:
             name, email, password_hash, long, lat = row
-            return User(name=name, mail_address=email, password=password_hash,
-                        password_is_hashed=True,
-                        home_address={"longitude": long, "latitude": lat})
+            return User(
+                name=name,
+                mail_address=email,
+                password=password_hash,
+                password_is_hashed=True,
+                home_address={"longitude": long, "latitude": lat},
+            )
         return None
 
     @staticmethod
@@ -141,8 +154,7 @@ class EveMapDAL:
             name, email, password_hash, long, lat = row
             row_data = {
                 'name': name,
-                'home_address': {"home_long": long,
-                                 "home_lat": lat},
+                'home_address': {"home_long": long, "home_lat": lat},
                 'mail_address': email,
                 'password': password_hash,
             }
@@ -217,7 +229,7 @@ class EveMapDAL:
                     longitude=row[3],
                     risk=row[4],
                     city=row[5] if row[5] else "Unknown",
-                    region=row[6] if row[6] else "Unknown"
+                    region=row[6] if row[6] else "Unknown",
                 )
                 events.append(event)
             except Exception as e:

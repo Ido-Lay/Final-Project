@@ -73,18 +73,42 @@ def create_dummy_data_for_database():
     # 1. Dummy Users
     print("\nInserting dummy users into USERS table...")
     dummy_users = [
-        User(name="Alice Smith", mail_address="ido.eliav10@gmail.com", password="password123",
-             home_address={"longitude": 34.8, "latitude": 32.1}),  # Tel Aviv area
-        User(name="Bob Johnson", mail_address="ido.eliavgames@gmail.com", password="bobspassword",
-             home_address={"longitude": 35.2, "latitude": 31.8}),  # Jerusalem area
-        User(name="Charlie Brown", mail_address="sussyzyla@gmail.com", password="securepass",
-             home_address={"longitude": 34.9, "latitude": 32.8}),  # Haifa area
-        User(name="Diana Prince", mail_address="annastiseuss@gmail.com", password="wonder",
-             home_address={"longitude": 34.7, "latitude": 31.3}),  # South area
-        User(name="Ethan Hunt", mail_address="annastiseussim@gmail.com", password="mission",
-             home_address={"longitude": 35.5, "latitude": 32.9}),  # North area
-        User(name="Fiona Glenanne", mail_address="annastiodseussim@gmail.com", password="boom",
-             home_address={"longitude": 35.55, "latitude": 32.95})  # Example, can add more
+        User(
+            name="Alice Smith",
+            mail_address="ido.eliav10@gmail.com",
+            password="password123",
+            home_address={"longitude": 34.8, "latitude": 32.1},
+        ),  # Tel Aviv area
+        User(
+            name="Bob Johnson",
+            mail_address="ido.eliavgames@gmail.com",
+            password="bobspassword",
+            home_address={"longitude": 35.2, "latitude": 31.8},
+        ),  # Jerusalem area
+        User(
+            name="Charlie Brown",
+            mail_address="sussyzyla@gmail.com",
+            password="securepass",
+            home_address={"longitude": 34.9, "latitude": 32.8},
+        ),  # Haifa area
+        User(
+            name="Diana Prince",
+            mail_address="annastiseuss@gmail.com",
+            password="wonder",
+            home_address={"longitude": 34.7, "latitude": 31.3},
+        ),  # South area
+        User(
+            name="Ethan Hunt",
+            mail_address="annastiseussim@gmail.com",
+            password="mission",
+            home_address={"longitude": 35.5, "latitude": 32.9},
+        ),  # North area
+        User(
+            name="Fiona Glenanne",
+            mail_address="annastiodseussim@gmail.com",
+            password="boom",
+            home_address={"longitude": 35.55, "latitude": 32.95},
+        ),  # Example, can add more
     ]
     for user in dummy_users:
         try:
@@ -103,38 +127,127 @@ def create_dummy_data_for_database():
     print("\nInserting dummy events into EVENTS and ADMIN_EVENTS tables...")
     dummy_events_data = [
         # Events for ADMIN_EVENTS table (e.g., higher risk, admin-verified)
-        Event(event_name="Major Traffic Jam", longitude=34.7818, latitude=32.0853, risk=Risk.DANGER,
-              region="Fetching...", city="Fetching..."),  # Tel Aviv Center
-        Event(event_name="Accident Reported", longitude=34.75, latitude=32.05, risk=Risk.DANGER,
-              region="Fetching...", city="Fetching..."),  # Near Tel Aviv
-        Event(event_name="Accident - Route 4", longitude=34.81, latitude=32.1, risk=Risk.DANGER,
-              region="Fetching...", city="Fetching..."),
-        Event(event_name="VIP Security Zone", longitude=34.79, latitude=32.09, risk=Risk.DANGER,
-              region="Fetching...", city="Fetching..."),
-        Event(event_name="Emergency Roadwork", longitude=35.00, latitude=32.5, risk=Risk.DANGER,
-              region="Fetching...", city="Fetching..."),  # Another danger event
-
+        Event(
+            event_name="Major Traffic Jam",
+            longitude=34.7818,
+            latitude=32.0853,
+            risk=Risk.DANGER,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Tel Aviv Center
+        Event(
+            event_name="Accident Reported",
+            longitude=34.75,
+            latitude=32.05,
+            risk=Risk.DANGER,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Near Tel Aviv
+        Event(
+            event_name="Accident - Route 4",
+            longitude=34.81,
+            latitude=32.1,
+            risk=Risk.DANGER,
+            region="Fetching...",
+            city="Fetching...",
+        ),
+        Event(
+            event_name="VIP Security Zone",
+            longitude=34.79,
+            latitude=32.09,
+            risk=Risk.DANGER,
+            region="Fetching...",
+            city="Fetching...",
+        ),
+        Event(
+            event_name="Emergency Roadwork",
+            longitude=35.00,
+            latitude=32.5,
+            risk=Risk.DANGER,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Another danger event
         # Events for EVENTS table (e.g., user-reported, neutral, good)
-        Event(event_name="Road Closure - Main St", longitude=35.2137, latitude=31.7683, risk=Risk.NEUTRAL,
-              region="Fetching...", city="Fetching..."),  # Jerusalem Center
-        Event(event_name="Public Gathering - Park", longitude=34.9896, latitude=32.7940, risk=Risk.GOOD,
-              region="Fetching...", city="Fetching..."),  # Haifa Area
-        Event(event_name="Construction Zone", longitude=35.22, latitude=31.78, risk=Risk.NEUTRAL,
-              region="Fetching...", city="Fetching..."),  # Near Jerusalem
-        Event(event_name="Festival Prep", longitude=34.85, latitude=32.15, risk=Risk.GOOD,
-              region="Fetching...", city="Fetching..."),  # Near Tel Aviv North
-        Event(event_name="Festival - City Park", longitude=35.21, latitude=31.77, risk=Risk.GOOD,
-              region="Fetching...", city="Fetching..."),
-        Event(event_name="Planned Maintenance - Bridge", longitude=34.99, latitude=32.8,
-              risk=Risk.NEUTRAL, region="Fetching...", city="Fetching..."),
-        Event(event_name="Community Cleanup Event", longitude=34.76, latitude=31.25, risk=Risk.GOOD,
-              region="Fetching...", city="Fetching..."),  # Be'er Sheva area
-        Event(event_name="Reported Road Hazard", longitude=35.1, latitude=32.5, risk=Risk.NEUTRAL,
-              region="Fetching...", city="Fetching..."),  # Somewhere between Haifa and Jerusalem
-        Event(event_name="Unknown Location Event", longitude=1.0, latitude=1.0, risk=Risk.NEUTRAL,
-              region="Fetching...", city="Fetching..."),  # Intentionally bad coordinates for testing location fallback
-        Event(event_name="Local Market Day", longitude=34.77, latitude=32.07, risk=Risk.GOOD,
-              region="Fetching...", city="Fetching...")  # Another good event
+        Event(
+            event_name="Road Closure - Main St",
+            longitude=35.2137,
+            latitude=31.7683,
+            risk=Risk.NEUTRAL,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Jerusalem Center
+        Event(
+            event_name="Public Gathering - Park",
+            longitude=34.9896,
+            latitude=32.7940,
+            risk=Risk.GOOD,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Haifa Area
+        Event(
+            event_name="Construction Zone",
+            longitude=35.22,
+            latitude=31.78,
+            risk=Risk.NEUTRAL,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Near Jerusalem
+        Event(
+            event_name="Festival Prep",
+            longitude=34.85,
+            latitude=32.15,
+            risk=Risk.GOOD,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Near Tel Aviv North
+        Event(
+            event_name="Festival - City Park",
+            longitude=35.21,
+            latitude=31.77,
+            risk=Risk.GOOD,
+            region="Fetching...",
+            city="Fetching...",
+        ),
+        Event(
+            event_name="Planned Maintenance - Bridge",
+            longitude=34.99,
+            latitude=32.8,
+            risk=Risk.NEUTRAL,
+            region="Fetching...",
+            city="Fetching...",
+        ),
+        Event(
+            event_name="Community Cleanup Event",
+            longitude=34.76,
+            latitude=31.25,
+            risk=Risk.GOOD,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Be'er Sheva area
+        Event(
+            event_name="Reported Road Hazard",
+            longitude=35.1,
+            latitude=32.5,
+            risk=Risk.NEUTRAL,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Somewhere between Haifa and Jerusalem
+        Event(
+            event_name="Unknown Location Event",
+            longitude=1.0,
+            latitude=1.0,
+            risk=Risk.NEUTRAL,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Intentionally bad coordinates for testing location fallback
+        Event(
+            event_name="Local Market Day",
+            longitude=34.77,
+            latitude=32.07,
+            risk=Risk.GOOD,
+            region="Fetching...",
+            city="Fetching...",
+        ),  # Another good event
     ]
 
     admin_events_count = 0
@@ -147,12 +260,14 @@ def create_dummy_data_for_database():
                 EveMapDAL.insert_admin_event(event)
                 admin_events_count += 1
                 print(
-                    f"Inserted into ADMIN_EVENTS: {event.event_name} ({event.risk.name}) at ({event.latitude}, {event.longitude})")
+                    f"Inserted into ADMIN_EVENTS: {event.event_name} ({event.risk.name}) at ({event.latitude}, {event.longitude})"
+                )
             else:
                 EveMapDAL.insert_event(event)
                 user_events_count += 1
                 print(
-                    f"Inserted into EVENTS: {event.event_name} ({event.risk.name}) at ({event.latitude}, {event.longitude})")
+                    f"Inserted into EVENTS: {event.event_name} ({event.risk.name}) at ({event.latitude}, {event.longitude})"
+                )
         except Exception as e:
             print(f"An error occurred inserting event {event.event_name}: {e}")
 
@@ -191,7 +306,8 @@ if __name__ == "__main__":
             for event in all_events_main:
                 # Assuming Event class has a __str__ or a print_event method
                 print(
-                    f"  Event ID: {event.identity}, Name: {event.event_name}, Risk: {event.risk}, Location: ({event.latitude}, {event.longitude}), City: {event.city}, Region: {event.region}")
+                    f"  Event ID: {event.identity}, Name: {event.event_name}, Risk: {event.risk}, Location: ({event.latitude}, {event.longitude}), City: {event.city}, Region: {event.region}"
+                )
         else:
             print("  No events found in EVENTS table.")
 
@@ -200,7 +316,8 @@ if __name__ == "__main__":
         if all_events_admin:
             for event in all_events_admin:
                 print(
-                    f"  Admin Event ID: {event.identity}, Name: {event.event_name}, Risk: {event.risk}, Location: ({event.latitude}, {event.longitude}), City: {event.city}, Region: {event.region}")
+                    f"  Admin Event ID: {event.identity}, Name: {event.event_name}, Risk: {event.risk}, Location: ({event.latitude}, {event.longitude}), City: {event.city}, Region: {event.region}"
+                )
         else:
             print("  No events found in ADMIN_EVENTS table.")
 

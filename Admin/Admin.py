@@ -24,4 +24,3 @@ while True:
         conn.send(data.encode())
         conn.close()
     conn, address = server_socket.accept()
-

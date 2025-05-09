@@ -26,11 +26,11 @@ login_manager.login_view = "login"
 login_manager.init_app(app)
 
 
-
 def add_all_markers_to_ui(events: list[Event], m):
     for event in events:
         print(
-            f"Adding marker: {event.event_name}, Lat: {event.latitude}, Long: {event.longitude}, Risk: {event.risk}")  # Debugging
+            f"Adding marker: {event.event_name}, Lat: {event.latitude}, Long: {event.longitude}, Risk: {event.risk}"
+        )  # Debugging
         if event.risk == 0:
             icon_color = 'red'
         elif event.risk == 1:
@@ -65,10 +65,14 @@ def send_marker(event_json: dict):
 
     return "Sent successfully"
 
+
 app.secret_key = secrets.token_hex(32)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return EveMapDAL.get_user_by_email(user_id)  # Should return a User object or None
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -84,16 +88,17 @@ def login():
             flash("Invalid email or password.")
     return render_template("login.html")
 
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
 
+
 @app.route("/report", methods=["GET", "POST"])
 @login_required
-def report_event():
-    ...
+def report_event(): ...
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -113,6 +118,7 @@ def signup():
 
         # If new user, proceed to create
         from geopy.geocoders import Nominatim
+
         geolocator = Nominatim(user_agent="signup_app")
         location = geolocator.geocode(f"{street}, {city}, {state}, Israel")
         if location is None:
@@ -123,7 +129,7 @@ def signup():
             name=name,
             mail_address=email,
             password=password,
-            home_address={"longitude": location.longitude, "latitude": location.latitude}
+            home_address={"longitude": location.longitude, "latitude": location.latitude},
         )
 
         EveMapDAL.insert_user(user)
@@ -162,17 +168,17 @@ def map_with_markers():
 
     return render_template("map_view.html", map_html=map_html, cities=cities, regions=regions)
 
+
 @app.route("/submit")
 def submit_event():
     return render_template("submit_event.html")
+
 
 @app.route("/api/filters")
 def get_filter_options():
     cities = EveMapDAL.get_unique_cities()
     regions = EveMapDAL.get_unique_regions()
     return {"cities": cities, "regions": regions}
-
-
 
 
 if __name__ == "__main__":
