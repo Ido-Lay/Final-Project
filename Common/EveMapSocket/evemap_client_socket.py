@@ -71,3 +71,11 @@ class EveMapClientSocket(EveMapBaseSocket):
 
         if message.decode() == "1": return True
         if message.decode() == "0": return False
+
+    def send_email_command(self, user: User, event: Event):
+        data: dict = user.to_dict() + event.to_dict()
+        self.__send_command((json.dumps(data)).encode(), MessageType.SEND_MAIL, PacketType.REQUEST)
+        message, message_type, packet_type = self.__recv_command()
+
+        if message.decode() == "1": return True
+        if message.decode() == "0": return False
