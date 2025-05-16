@@ -1,6 +1,7 @@
 import json
 import secrets
 import socket
+from threading import Thread
 from typing import Final
 
 import folium
@@ -181,4 +182,9 @@ def get_filter_options():
 
 
 if __name__ == "__main__":
+    socket_thread = Thread(target=start_server_socket_loop, args=(HOST_SOCKET_PORT,))
+    socket_thread.start()
+
     app.run(host=HOST_IP, port=HOST_FLASK_PORT, debug=True)
+
+    socket_thread.join()

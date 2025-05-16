@@ -20,6 +20,37 @@ def start_server_socket_loop(_:int):
 
 def handle_client(conn_socket:EveMapConnSocket):
     while True:
-        conn_socket.handle_user_command()
+        message, message_type, packet_type = conn_socket.recv_command()
+
+        if message_type == MessageType.FETCH_USERS and packet_type == PacketType.REQUEST:
+            conn_socket.handle_user_command(EveMapDAL.get_all_users())
+
+        elif message_type == MessageType.FETCH_EVENTS and packet_type == PacketType.REQUEST:
+            conn_socket.handle_event_command(EveMapDAL.fetch_all_coordinates_from_admin_events())
+
+        elif message_type == MessageType.INSERT_EVENT and packet_type == PacketType.REQUEST:
+            conn_socket.handle_insert_event_command(message)
+
+        elif message_type == MessageType.INSERT_ADMIN_EVENT and packet_type == PacketType.REQUEST:
+            conn_socket.handle_insert_admin_event_command(message)
+
+        elif message_type == MessageType.DELETE_EVENT and packet_type == PacketType.REQUEST:
+            conn_socket.handle_delete_event_command(message)
+
+        elif message_type == MessageType.DELETE_ADMIN_EVENT and packet_type == PacketType.REQUEST:
+            conn_socket.handle_delete_admin_event_command(message)
+
+        elif message_type == MessageType.SEND_MAIL and packet_type == PacketType.REQUEST:
+            conn_socket.handle_send_email_command(message)
+
+        elif message_type == MessageType.CHECK_MAIL and packet_type == PacketType.REQUEST:
+            conn_socket.handle_check_email_command()
+
+        else:
+            print(f"Bad packet {message=} {message_type=} {packet_type=}")
+
+
+
+
 
 
