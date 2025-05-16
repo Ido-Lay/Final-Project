@@ -144,7 +144,7 @@ class EveMapDAL:
         return None
 
     @staticmethod
-    def get_all_users() -> Optional[list[User]]:
+    def get_all_users() ->list[User]:
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
         cursor.execute("SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS")
@@ -216,7 +216,7 @@ class EveMapDAL:
             cursor.execute(query, params)
             rows = cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"Error fetching admin events: {e}")
+            print(f"Error fetching events: {e}")
             rows = []  # Return empty list on error
         finally:
             conn.close()

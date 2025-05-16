@@ -16,7 +16,7 @@ class EveMapBaseSocket:
         packet = Packet.build_packet(data, message_type, packet_type)
         self.tcp_socket.send(packet.to_bytes())
 
-    def __recv_command(self) -> tuple[bytes, MessageType, PacketType]:
+    def recv_command(self) -> tuple[bytes, MessageType, PacketType]:
         data_length = int.from_bytes(self.tcp_socket.recv(Packet.get_data_length_field_size()))
         packet_type = PacketType(int.from_bytes(self.tcp_socket.recv(Packet.get_packet_type_field_size())))
         message_type = MessageType(int.from_bytes(self.tcp_socket.recv(Packet.get_message_type_field_size())))
