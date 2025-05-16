@@ -61,5 +61,5 @@ class EveMapConnSocket(EveMapBaseSocket):
             self.send_command(b'0', MessageType.SEND_MAIL, PacketType.REPLY)
 
     def handle_check_email_command(self):
-        result_message = check_email()
+        result_message = check_email(EveMapDAL.fetch_all_coordinates_from_admin_events())
         self.send_command(result_message, MessageType.CHECK_MAIL, PacketType.REPLY)

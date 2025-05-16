@@ -1,32 +1,16 @@
-import email
-import imaplib
 import os
 import re
-import smtplib
 import sqlite3  # Import for specific error handling
 import tkinter as tk
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from math import atan2, cos, radians, sin, sqrt
 from tkinter import font as tkFont
 from tkinter import messagebox, ttk
 
 from dotenv import load_dotenv
 load_dotenv()
 
-# --- Import your actual classes and functions ---
-try:
-    from admin_db import AdminDAL  # From admin_db.py
-    from Event import Event, Risk  # Assuming Risk enum is in Event.py
-    from events_db import EventsDAL  # From dal.py
-    from User import User
+from Common.EveMapSocket import EveMapClientSocket
 
-    # from location_from_coordinates import get_location_from_coordinates # Needed by DALs, not directly here
-except ImportError as e:
-    print(f"ERROR: Failed to import required modules: {e}")
-    print("Ensure Event.py, User.py, admin_db.py, events_db.py, location_from_coordinates.py exist.")
-    exit()
-# --- End Imports ---
+# --- Import your actual classes and functions ---
 
 
 # Constants for styling (remain the same)
@@ -46,10 +30,15 @@ IMAP_SERVER = "imap.gmail.com"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
+SERVER_HOST = '127.0.0.1'
+SERVER_PORT = 6000
 
-# Function to send emails (remains the same)
-def send_email(user: User, event: Event):
-    ...
+def connect_to_server():
+    client = EveMapClientSocket()
+    client.tcp_socket.connect((SERVER_HOST, SERVER_PORT))
+    print("[i] Connected to EveMap server.")
+    return client
+
 
 
 # Tkinter UI for admin panel
@@ -94,7 +83,7 @@ class AdminPanel:
         event_label.grid(row=0, column=0, padx=PAD_X, pady=PAD_Y, sticky=tk.W)
 
         self.event_var = tk.StringVar()
-        event_display_list = [f"{e.event_name}" for e in self.events]
+        event_display_list = [f"{e.event_name} (ID: {e.identity})" for e in self.events]
         self.event_combo = ttk.Combobox(
             content_frame, textvariable=self.event_var, values=event_display_list, state='readonly', width=40
         )
@@ -216,8 +205,8 @@ class AdminPanel:
 
         self.status_var.set(f"Status: Sending email to {selected_user.mail_address}...")
         self.root.update_idletasks()  # Force UI update
-
-        success = send_email(selected_user, selected_event)
+        client = connect_to_server()
+        success = client.send_email_command(selected_user, selected_event)
 
         if success:
             messagebox.showinfo("Success", f"Verification email successfully sent to {selected_user.name}")
@@ -232,7 +221,9 @@ class AdminPanel:
         self.status_var.set("Status: Checking emails...")
         self.root.update_idletasks()
 
-        result_message = '' # TODO fill after calling function with client socket
+        client = connect_to_server()
+        client.check_email_command()
+        result_message = client.check_email_command()
 
         self.status_var.set("Status: Email check complete. See details.")
         messagebox.showinfo("Confirmation Check Results", result_message)
@@ -247,8 +238,9 @@ if __name__ == "__main__":
     all_users = None
     try:
         # --- Use actual DAL methods ---
-        admin_events = AdminDAL.fetch_all_coordinates()
-        all_users = EventsDAL.get_all_users()
+        client = connect_to_server()
+        admin_events = client.get_events_command()
+        all_users = client.get_users_command()
         # --- End DAL usage ---
 
         if admin_events is None:  # DAL methods should return [] on error/no data, not None ideally
@@ -261,19 +253,6 @@ if __name__ == "__main__":
         print(f"Found {len(admin_events)} events in admin DB.")
         print(f"Found {len(all_users)} users in main DB.")
 
-    except sqlite3.OperationalError as db_e:
-        print(f"Fatal DB Error: {db_e}. Does the table/database exist or is it locked?")
-        try:
-            root_err = tk.Tk()
-            root_err.withdraw()
-            messagebox.showerror(
-                "Database Error",
-                f"Could not read from database.\nError: {db_e}\n\nCheck file paths and table structures.\nApplication will exit.",
-            )
-            root_err.destroy()
-        except tk.TclError:
-            pass
-        exit()
     except Exception as e:
         print(f"Fatal Error: Could not fetch initial data: {e}")
         try:

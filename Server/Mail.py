@@ -76,11 +76,14 @@ def send_email(user: User, event: Event):
 
 
 
-def check_email(sender_email_config, sender_password_config, imap_server_config, current_event_map):
+def check_email(current_event_map):
     """
     Connects to IMAP, checks replies, and processes event confirmations/denials.
     Returns a comprehensive result message.
     """
+    sender_email_config = SENDER_EMAIL
+    sender_password_config = SENDER_PASSWORD
+    imap_server_config = IMAP_SERVER
     print("Checking for confirmation emails...")
 
     if not sender_password_config:
