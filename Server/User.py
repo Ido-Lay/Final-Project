@@ -39,7 +39,7 @@ class User:
             "name": self.name,
             "home_address": self.home_address,
             "mail_address": self.mail_address,
-            "password_hash": self.password_hash,  # Store hashed password, not plain text
+            "password": self.password_hash,  # Store hashed password, not plain text
         }
 
     @classmethod
