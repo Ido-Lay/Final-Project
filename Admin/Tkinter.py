@@ -12,7 +12,6 @@ from tkinter import font as tkFont
 from tkinter import messagebox, ttk
 
 from dotenv import load_dotenv
-
 load_dotenv()
 
 # --- Import your actual classes and functions ---

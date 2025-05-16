@@ -8,8 +8,8 @@ from dal import EveMapDAL
 from Event import Event, Risk
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager, login_required, login_user, logout_user
-from geopy.geocoders import Nominatim
 from User import User
+from server_socket import start_server_socket_loop
 
 HOST_IP: Final[str] = '0.0.0.0'
 HOST_SOCKET_PORT: Final[int] = 6000
