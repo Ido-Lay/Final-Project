@@ -3,14 +3,14 @@ import os
 import smtplib
 import sqlite3
 
-import User
+from Server.User import User
 from dotenv import load_dotenv
-import Event
+from Server.Event import Event
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email
 import re
-from dal import EveMapDAL
+from Server.dal import EveMapDAL
 load_dotenv()
 
 SENDER_EMAIL = os.getenv("GMAIL_APP_MAIl")

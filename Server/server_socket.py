@@ -1,10 +1,12 @@
 import socket
 import threading
-from ..Common.EveMapSocket import EveMapServerSocket,EveMapConnSocket, MessageType, PacketType
+from Common.EveMapSocket import EveMapServerSocket, EveMapConnSocket, MessageType, PacketType
 from dal import EveMapDAL
+
 HOST = '0.0.0.0'
 
-def start_server_socket_loop(_:int):
+
+def start_server_socket_loop():
     server_socket = EveMapServerSocket()
     server_socket.bind_and_listen(HOST)
 
@@ -18,7 +20,7 @@ def start_server_socket_loop(_:int):
         client_thread.start()
 
 
-def handle_client(conn_socket:EveMapConnSocket):
+def handle_client(conn_socket: EveMapConnSocket):
     while True:
         message, message_type, packet_type = conn_socket.recv_command()
 
@@ -48,9 +50,3 @@ def handle_client(conn_socket:EveMapConnSocket):
 
         else:
             print(f"Bad packet {message=} {message_type=} {packet_type=}")
-
-
-
-
-
-

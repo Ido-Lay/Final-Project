@@ -2,13 +2,13 @@ import json
 import socket
 from typing import Optional
 
-from evemap_base_socket import EveMapBaseSocket
-from ...Server.User import User
-from packet import Packet, MessageType, PacketType
-from ...Server.Event import Event
-from ...Server.dal import EveMapDAL
-from ...Server.Mail import send_email
-from ...Server.Mail import check_email
+from .evemap_base_socket import EveMapBaseSocket
+from Server.User import User
+from .packet import Packet, MessageType, PacketType
+from Server.Event import Event
+from Server.dal import EveMapDAL
+from Server.Mail import send_email
+from Server.Mail import check_email
 
 
 class EveMapConnSocket(EveMapBaseSocket):
@@ -18,37 +18,37 @@ class EveMapConnSocket(EveMapBaseSocket):
 
     def handle_user_command(self, user_list: list[User]):
         user_list_json = json.dumps([user.to_dict() for user in user_list]).encode()
-        self.__send_command(user_list_json, MessageType.FETCH_USERS, PacketType.REPLY)
+        self.send_command(user_list_json, MessageType.FETCH_USERS, PacketType.REPLY)
 
     def handle_event_command(self, event_list: list[Event]):
         event_list_json = json.dumps([event.to_dict() for event in event_list]).encode()
-        self.__send_command(event_list_json, MessageType.FETCH_USERS, PacketType.REPLY)
+        self.send_command(event_list_json, MessageType.FETCH_EVENTS, PacketType.REPLY)
 
     def handle_insert_event_command(self, message: bytes):
         event = Event.from_dict(json.loads(message.decode()))
         if EveMapDAL.insert_event(event):
-            self.__send_command(b'1', MessageType.INSERT_EVENT, PacketType.REPLY)
+            self.send_command(b'1', MessageType.INSERT_EVENT, PacketType.REPLY)
         else:
-            self.__send_command(b'0', MessageType.INSERT_EVENT, PacketType.REPLY)
+            self.send_command(b'0', MessageType.INSERT_EVENT, PacketType.REPLY)
 
     def handle_insert_admin_event_command(self, message: bytes):
         event = Event.from_dict(json.loads(message.decode()))
         if EveMapDAL.insert_event(event):
-            self.__send_command(b'1', MessageType.INSERT_ADMIN_EVENT, PacketType.REPLY)
+            self.send_command(b'1', MessageType.INSERT_ADMIN_EVENT, PacketType.REPLY)
         else:
-            self.__send_command(b'0', MessageType.INSERT_ADMIN_EVENT, PacketType.REPLY)
+            self.send_command(b'0', MessageType.INSERT_ADMIN_EVENT, PacketType.REPLY)
 
     def handle_delete_event_command(self, message: bytes):
         if EveMapDAL.delete_event(int(message.decode())):
-            self.__send_command(b'1', MessageType.DELETE_EVENT, PacketType.REPLY)
+            self.send_command(b'1', MessageType.DELETE_EVENT, PacketType.REPLY)
         else:
-            self.__send_command(b'0', MessageType.DELETE_EVENT, PacketType.REPLY)
+            self.send_command(b'0', MessageType.DELETE_EVENT, PacketType.REPLY)
 
     def handle_delete_admin_event_command(self, message: bytes):
         if EveMapDAL.delete_admin_event(int(message.decode())):
-            self.__send_command(b'1', MessageType.DELETE_ADMIN_EVENT, PacketType.REPLY)
+            self.send_command(b'1', MessageType.DELETE_ADMIN_EVENT, PacketType.REPLY)
         else:
-            self.__send_command(b'0', MessageType.DELETE_ADMIN_EVENT, PacketType.REPLY)
+            self.send_command(b'0', MessageType.DELETE_ADMIN_EVENT, PacketType.REPLY)
 
     def handle_send_email_command(self, message: bytes):
         message = json.loads(message.decode())
@@ -56,10 +56,10 @@ class EveMapConnSocket(EveMapBaseSocket):
         user: User = User.from_dict(message)
 
         if send_email(user, event):
-            self.__send_command(b'1', MessageType.SEND_MAIL, PacketType.REPLY)
+            self.send_command(b'1', MessageType.SEND_MAIL, PacketType.REPLY)
         else:
-            self.__send_command(b'0', MessageType.SEND_MAIL, PacketType.REPLY)
+            self.send_command(b'0', MessageType.SEND_MAIL, PacketType.REPLY)
 
     def handle_check_email_command(self):
         result_message = check_email()
-        self.__send_command(result_message, MessageType.CHECK_MAIL, PacketType.REPLY)
+        self.send_command(result_message, MessageType.CHECK_MAIL, PacketType.REPLY)

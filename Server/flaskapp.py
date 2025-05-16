@@ -51,19 +51,17 @@ def add_all_markers_to_ui(events: list[Event], m):
 def send_marker(event_json: dict):
     event = Event.from_dict(event_json)
     event.print_event()
-
     try:
-        client_socket = socket.socket()  # instantiate
-        client_socket.connect((HOST_IP, HOST_SOCKET_PORT))  # connect to the server
         if event.risk == Risk.DANGER:
-            client_socket.send(json.dumps(event_json).encode('utf-8'))  # send message
+            EveMapDAL.insert_admin_event(event)
+
         else:
             EveMapDAL.insert_event(event)
 
     except Exception as ex:
-        print(f"Error sending data: {ex}")
+        print(f"Error inserting data: {ex}")
 
-    return "Sent successfully"
+    return "inserted successfully"
 
 
 app.secret_key = secrets.token_hex(32)
@@ -182,7 +180,7 @@ def get_filter_options():
 
 
 if __name__ == "__main__":
-    socket_thread = Thread(target=start_server_socket_loop, args=(HOST_SOCKET_PORT,))
+    socket_thread = Thread(target=start_server_socket_loop, args=())
     socket_thread.start()
 
     app.run(host=HOST_IP, port=HOST_FLASK_PORT, debug=True)

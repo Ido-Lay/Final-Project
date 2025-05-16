@@ -1,7 +1,7 @@
 from typing import Final
 
-from evemap_base_socket import EveMapBaseSocket
-from evemap_conn_socket import EveMapConnSocket
+from .evemap_base_socket import EveMapBaseSocket
+from .evemap_conn_socket import EveMapConnSocket
 
 PORT: Final[int] = 6000
 

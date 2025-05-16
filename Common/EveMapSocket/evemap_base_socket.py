@@ -1,6 +1,6 @@
 import socket
 
-from packet import MessageType, Packet, PacketType
+from .packet import MessageType, Packet, PacketType
 
 
 class EveMapBaseSocket:
@@ -8,11 +8,12 @@ class EveMapBaseSocket:
 
     def __init__(self) -> None:
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def close(self) -> None:
         self.tcp_socket.close()
 
-    def __send_command(self, data: bytes, message_type: MessageType, packet_type: PacketType):
+    def send_command(self, data: bytes, message_type: MessageType, packet_type: PacketType):
         packet = Packet.build_packet(data, message_type, packet_type)
         self.tcp_socket.send(packet.to_bytes())
 

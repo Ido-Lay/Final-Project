@@ -1,4 +1,4 @@
-from Event import Event
+from Server.Event import Event
 from geopy.geocoders import Nominatim
 
 
