@@ -67,7 +67,7 @@ class EveMapClientSocket(EveMapBaseSocket):
         if message.decode() == "0": return False
 
     def send_email_command(self, user: User, event: Event):
-        data: dict = user.to_dict() | event.to_dict()
+        data: dict = user.to_dict() | event.to_dict_risk_is_int()
         print(data)
         self.send_command((json.dumps(data)).encode(), MessageType.SEND_MAIL, PacketType.REQUEST)
         message, message_type, packet_type = self.recv_command()

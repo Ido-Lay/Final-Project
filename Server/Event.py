@@ -29,6 +29,17 @@ class Event:
             "city": self.city,
         }
 
+    def to_dict_risk_is_int(self):
+        return {
+            "identity": self.identity,
+            "event_name": self.event_name,
+            "longitude": self.longitude,
+            "latitude": self.latitude,
+            "risk": self.risk.value,
+            "region": self.region,
+            "city": self.city,
+        }
+
     def print_event(self):
         print(
             "id: ",
