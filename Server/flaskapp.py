@@ -5,7 +5,7 @@ from threading import Thread
 from typing import Final
 
 import folium
-from dal import EveMapDAL
+from EveMapDAL import EveMapDAL
 from Event import Event, Risk
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager, login_required, login_user, logout_user

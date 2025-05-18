@@ -116,7 +116,6 @@ class EveMapDAL:
 
         # Safely get coordinates
         longitude, latitude = user.get_longitude_and_latitude()
-
         c.execute(
             '''
             INSERT INTO USERS (name, mail_address, password_hash, home_long, home_lat)
@@ -127,6 +126,8 @@ class EveMapDAL:
 
         conn.commit()
         conn.close()
+
+        return True
 
     @staticmethod
     def get_user_by_email(email: str) -> Optional[User]:

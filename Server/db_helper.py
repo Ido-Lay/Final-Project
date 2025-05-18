@@ -1,8 +1,8 @@
 import os
 import sqlite3
 
-# Import from the refactored dal.py
-from dal import DATABASE_FILENAME, EveMapDAL  # Import the single DAL and the database filename
+# Import from the refactored EveMapDAL.py
+from EveMapDAL import DATABASE_FILENAME, EveMapDAL  # Import the single DAL and the database filename
 # Assuming Event.py, User.py are in the same directory or accessible
 from Event import Event, Risk
 from User import User
@@ -13,7 +13,7 @@ from User import User
 # and you want to avoid them during dummy data creation.
 # For EveMapDAL to use this specific mock when helper.py is run,
 # the 'location_from_coordinates.py' file itself should ideally contain this mock logic,
-# or advanced patching should be used. dal.py imports it directly.
+# or advanced patching should be used. EveMapDAL.py imports it directly.
 def get_location_from_coordinates(event: Event) -> tuple[str, str]:
     """
     Mock function to return plausible region/city based on coordinates.
@@ -274,13 +274,13 @@ def create_dummy_data_for_database():
 # --- Main execution block ---
 if __name__ == "__main__":
     # This block allows you to run this script directly to populate the database.
-    # Ensure Event.py, User.py, dal.py, and a (potentially mock)
+    # Ensure Event.py, User.py, EveMapDAL.py, and a (potentially mock)
     # location_from_coordinates.py are in the same directory or accessible.
 
     # If location_from_coordinates.py contains the real API call, and you want to use the mock
     # for this script, you'd typically replace the content of location_from_coordinates.py
     # with the mock function temporarily, or use a more advanced patching technique.
-    # For simplicity, this script assumes dal.py's import will resolve to either the
+    # For simplicity, this script assumes EveMapDAL.py's import will resolve to either the
     # real function or a mock version made available at the `location_from_coordinates` import path.
 
     create_dummy_data_for_database()

@@ -10,7 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email
 import re
-from Server.dal import EveMapDAL
+from Server.EveMapDAL import EveMapDAL
 load_dotenv()
 
 SENDER_EMAIL = os.getenv("GMAIL_APP_MAIl")

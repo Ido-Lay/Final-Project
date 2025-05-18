@@ -6,7 +6,7 @@ from .evemap_base_socket import EveMapBaseSocket
 from Server.User import User
 from .packet import Packet, MessageType, PacketType
 from Server.Event import Event
-from Server.dal import EveMapDAL
+from Server.EveMapDAL import EveMapDAL
 from Server.Mail import send_email
 from Server.Mail import check_email
 

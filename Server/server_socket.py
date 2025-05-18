@@ -1,7 +1,7 @@
 import socket
 import threading
 from Common.EveMapSocket import EveMapServerSocket, EveMapConnSocket, MessageType, PacketType
-from dal import EveMapDAL
+from EveMapDAL import EveMapDAL
 
 HOST = '0.0.0.0'
 
