@@ -1,3 +1,4 @@
+import math
 import sqlite3
 import threading
 import time
@@ -83,6 +84,10 @@ class EveMapDAL:
             f"{event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}"
         )
 
+        if EveMapDAL.similar_event_from_table(event, table_name):
+            print("There is already a similar event")
+            return False
+
         cursor.execute(
             f"""
             INSERT INTO {table_name} (event_name, longitude, latitude, risk, region, city, created_at)
@@ -144,7 +149,7 @@ class EveMapDAL:
         return None
 
     @staticmethod
-    def get_all_users() ->list[User]:
+    def get_all_users() -> list[User]:
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
         cursor.execute("SELECT name, mail_address, password_hash, home_long, home_lat FROM USERS")
@@ -289,3 +294,73 @@ class EveMapDAL:
     @staticmethod
     def delete_admin_event(db_id: int) -> bool:
         return EveMapDAL.delete_event_from_table(db_id, 'ADMIN_EVENTS')
+
+    @staticmethod
+    def distance_between_events(event1: Event, event2: Event) -> float:
+        earth_radius = 6371000
+
+        lat1 = event1.latitude
+        long1 = event1.longitude
+        lat2 = event2.latitude
+        long2 = event2.longitude
+
+        lat1_rad = math.radians(lat1)
+        lon1_rad = math.radians(long1)
+        lat2_rad = math.radians(lat2)
+        lon2_rad = math.radians(long2)
+
+        # Differences
+        delta_lat = lat2_rad - lat1_rad
+        delta_lon = lon2_rad - lon1_rad
+
+        # Haversine formula
+        a = math.sin(delta_lat / 2) ** 2 + \
+            math.cos(lat1_rad) * math.cos(lat2_rad) * \
+            math.sin(delta_lon / 2) ** 2
+
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        distance = earth_radius * c
+
+        return distance
+
+    @staticmethod
+    def similar_event_from_table(event_to_check: Event, table_name: str) -> bool:
+        conn = sqlite3.connect(DATABASE_FILENAME)
+        cursor = conn.cursor()
+
+        query = f"SELECT id, event_name, latitude, longitude, risk, city, region FROM {table_name} WHERE 1=1"
+
+        try:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Error fetching events: {e}")
+            rows = []  # Return empty list on error
+        finally:
+            conn.close()
+
+        events = []
+        for row in rows:
+            try:
+                event = Event(
+                    identity=row[0],
+                    event_name=row[1],
+                    latitude=row[2],
+                    longitude=row[3],
+                    risk=row[4],
+                    city=row[5] if row[5] else "Unknown",
+                    region=row[6] if row[6] else "Unknown",
+                )
+                events.append(event)
+            except Exception as e:
+                print(f"Error processing row {row}: {e}")  # Catch errors during Event object creation
+
+        for event in events:
+            if event == event_to_check:
+                return True
+
+            if event.event_name == event_to_check.event_name and event.risk == event_to_check.risk and EveMapDAL.distance_between_events(event, event_to_check):
+                return True
+
+        return False
