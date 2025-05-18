@@ -1,5 +1,5 @@
 from .evemap_base_socket import EveMapBaseSocket
-from .packet import Packet, MessageType, PacketType
+from .eve_packet import Packet, MessageType, PacketType
 import json
 from Server.User import User
 from Server.Event import Event

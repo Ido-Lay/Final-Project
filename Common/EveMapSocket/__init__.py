@@ -1,4 +1,4 @@
 from .evemap_client_socket import EveMapClientSocket
 from .evemap_conn_socket import EveMapConnSocket
 from .evemap_server_socket import EveMapServerSocket
-from .packet import MessageType, PacketType
+from .eve_packet import MessageType, PacketType

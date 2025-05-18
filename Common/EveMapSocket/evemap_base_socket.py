@@ -1,6 +1,6 @@
 import socket
 
-from .packet import MessageType, Packet, PacketType
+from .eve_packet import MessageType, Packet, PacketType
 
 
 class EveMapBaseSocket:
