@@ -94,11 +94,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/report", methods=["GET", "POST"])
-@login_required
-def report_event(): ...
-
-
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
