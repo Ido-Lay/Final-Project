@@ -23,6 +23,15 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
+    <nav>
+        <a href="{{ url_for('map_with_markers') }}">Map View</a> |
+        {% if current_user.is_authenticated %}
+            <span>Welcome, {{ current_user.name }}!</span>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+        {% endif %}
+    </nav>
     <h2>Submit an Event</h2>
     <p>Click anywhere on the map to report an event</p>
 

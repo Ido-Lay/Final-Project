@@ -13,7 +13,16 @@ def get_location_from_coordinates(event: Event) -> tuple[str, str]:
         region = address.get('state', '')  # The state (region)
         city = address.get('city', '')  # The city
 
-        return region, city
+        if region:
+            if city:
+                return region, city
+            else:
+                return region, "Unknown"
+        if city:
+            if region:
+                return region, city
+            else:
+                return "Unknown", city
 
     print(f"Warning: Could not fetch location info for event {event.event_name}")
     return "Unknown", "Unknown"
