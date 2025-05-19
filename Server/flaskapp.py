@@ -39,7 +39,7 @@ def add_all_markers_to_ui(events: list[Event], m):
             icon_color = 'blue'
         else:
             icon_color = 'black'
-            # TODO handle it
+            print("Event with a risk error")
 
         folium.Marker(
             location=[event.latitude, event.longitude],

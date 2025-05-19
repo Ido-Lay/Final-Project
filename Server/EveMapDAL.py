@@ -206,15 +206,15 @@ class EveMapDAL:
         query = f"SELECT id, event_name, latitude, longitude, risk, city, region FROM {table_name} WHERE 1=1"
         params = []
 
-        if city is not None:
+        if city:
             query += " AND city = ?"
             params.append(city)
 
-        if region is not None:
+        if region:
             query += " AND region = ?"
             params.append(region)
 
-        if risk is not None:
+        if risk:
             query += " AND risk = ?"
             params.append(risk)
 
