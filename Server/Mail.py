@@ -81,10 +81,6 @@ class Mail:
 
     @staticmethod
     def check_email(current_event_map):
-        """
-        Connects to IMAP, checks replies, and processes event confirmations/denials.
-        Returns a comprehensive result message.
-        """
         sender_email_config = SENDER_EMAIL
         sender_password_config = SENDER_PASSWORD
         imap_server_config = IMAP_SERVER

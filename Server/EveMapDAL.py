@@ -7,7 +7,7 @@ from typing import Final, Optional
 
 import schedule
 from Server.Event import Event
-from Server.location_from_coordinates import get_location_from_coordinates
+from Server.location_from_coordinates import GeoUtils
 from Server.User import User
 
 DATABASE_FILENAME: Final[str] = 'evemap.db'
@@ -73,7 +73,7 @@ class EveMapDAL:
 
         connection = sqlite3.connect(DATABASE_FILENAME, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = connection.cursor()
-        region, city = get_location_from_coordinates(event)
+        region, city = GeoUtils.get_location_from_coordinates(event)
 
         if (event.region, event.city) == ("Unknown", "Unknown"):
             print(f"Warning: Could not fetch location info for event {event.event_name}")
