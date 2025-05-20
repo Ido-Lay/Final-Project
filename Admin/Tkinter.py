@@ -222,7 +222,6 @@ class AdminPanel:
         self.root.update_idletasks()
 
         client = connect_to_server()
-        client.check_email_command()
         result_message = client.check_email_command()
 
         self.status_var.set("Status: Email check complete. See details.")

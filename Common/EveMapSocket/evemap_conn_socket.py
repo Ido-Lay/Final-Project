@@ -7,8 +7,7 @@ from Server.User import User
 from .eve_packet import Packet, MessageType, PacketType
 from Server.Event import Event
 from Server.EveMapDAL import EveMapDAL
-from Server.Mail import send_email
-from Server.Mail import check_email
+from Server.Mail import Mail
 
 
 class EveMapConnSocket(EveMapBaseSocket):
@@ -55,11 +54,11 @@ class EveMapConnSocket(EveMapBaseSocket):
         event: Event = Event.from_dict(message)
         user: User = User.from_dict(message)
 
-        if send_email(user, event):
+        if Mail.send_email(user, event):
             self.send_command(b'1', MessageType.SEND_MAIL, PacketType.REPLY)
         else:
             self.send_command(b'0', MessageType.SEND_MAIL, PacketType.REPLY)
 
     def handle_check_email_command(self):
-        result_message = check_email(EveMapDAL.fetch_all_coordinates_from_admin_events())
+        result_message = Mail.check_email(EveMapDAL.fetch_all_coordinates_from_admin_events())
         self.send_command(result_message.encode(), MessageType.CHECK_MAIL, PacketType.REPLY)
