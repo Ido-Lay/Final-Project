@@ -45,10 +45,8 @@ def connect_to_server():
 class AdminPanel:
     def __init__(self, root, admin_events, all_users):
         self.root = root
-        # Use the data fetched from actual DALs
         self.events = admin_events if admin_events else []
         self.users = all_users if all_users else []
-        # Create map using event identity from fetched admin_events
         self.event_map = {e.identity: e for e in self.events}
 
         self.root.title("Event Verification Admin Panel")
