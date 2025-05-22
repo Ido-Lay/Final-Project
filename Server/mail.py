@@ -80,7 +80,7 @@ class Mail:
             return False
 
     @staticmethod
-    def check_email(current_event_map):
+    def check_email(current_event_map: list[Event]):
         sender_email_config = SENDER_EMAIL
         sender_password_config = SENDER_PASSWORD
         imap_server_config = IMAP_SERVER
@@ -155,9 +155,9 @@ class Mail:
                                         continue
 
                                     event_id = int(event_id_match.group(1))
-                                    confirmed_event = current_event_map.get(event_id)
+                                    confirmed_event = next((event for event in current_event_map if event.identity == event_id), None)
 
-                                    if not confirmed_event:
+                                    if confirmed_event is None:
                                         print(f"  - Skipping: Event ID {event_id} not found in local event map.")
                                         errors.append(
                                             f"Event ID {event_id} from email subject not in provided event_map.")
