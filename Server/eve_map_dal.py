@@ -298,7 +298,7 @@ class EveMapDAL:
 
     @staticmethod
     def distance_between_events(event1: Event, event2: Event) -> float:
-        earth_radius = 6371000
+        earth_radius = 6_371_000
 
         lat1 = event1.latitude
         long1 = event1.longitude
@@ -361,7 +361,8 @@ class EveMapDAL:
             if event == event_to_check:
                 return True
 
-            if event.event_name == event_to_check.event_name and event.risk == event_to_check.risk and EveMapDAL.distance_between_events(event, event_to_check):
+            if (event.event_name == event_to_check.event_name and event.risk == event_to_check.risk and
+                    EveMapDAL.distance_between_events(event, event_to_check) < 100):
                 return True
 
         return False
