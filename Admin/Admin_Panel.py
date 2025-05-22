@@ -10,25 +10,16 @@ load_dotenv()
 
 from Common.EveMapSocket import EveMapClientSocket
 
-# --- Import your actual classes and functions ---
 
-
-# Constants for styling (remain the same)
 PAD_X = 15
 PAD_Y = 8
 WINDOW_WIDTH = 700
-WINDOW_HEIGHT = 450  # Slightly increased height for status label
+WINDOW_HEIGHT = 450
 FONT_FAMILY = "Segoe UI"
 FONT_NORMAL_SIZE = 11
 FONT_LABEL_SIZE = 12
 FONT_BUTTON_SIZE = 11
 
-# --- Email Credentials ---
-SENDER_EMAIL = os.getenv("GMAIL_APP_MAIl")
-SENDER_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-IMAP_SERVER = "imap.gmail.com"
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
 
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 6000
@@ -41,7 +32,6 @@ def connect_to_server():
 
 
 
-# Tkinter UI for admin panel
 class AdminPanel:
     def __init__(self, root, admin_events, all_users):
         self.root = root
