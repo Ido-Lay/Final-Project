@@ -2,7 +2,7 @@ import socket
 import threading
 from Common.EveMapSocket import EveMapServerSocket, EveMapConnSocket
 from Common.packet_base.eve_packet import MessageType, PacketType
-from EveMapDAL import EveMapDAL
+from eve_map_dal import EveMapDAL
 
 HOST = '0.0.0.0'
 

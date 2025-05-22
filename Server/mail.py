@@ -3,14 +3,14 @@ import os
 import smtplib
 import sqlite3
 
-from Server.User import User
+from Server.user import User
 from dotenv import load_dotenv
-from Server.Event import Event
+from Server.event import Event
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email
 import re
-from Server.EveMapDAL import EveMapDAL
+from Server.eve_map_dal import EveMapDAL
 
 load_dotenv()
 

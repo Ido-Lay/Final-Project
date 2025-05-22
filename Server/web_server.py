@@ -5,11 +5,11 @@ from threading import Thread
 from typing import Final
 
 import folium
-from EveMapDAL import EveMapDAL
-from Event import Event, Risk
+from eve_map_dal import EveMapDAL
+from event import Event, Risk
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager, login_required, login_user, logout_user
-from User import User
+from user import User
 from server_socket import start_server_socket_loop
 
 HOST_IP: Final[str] = '0.0.0.0'

@@ -2,7 +2,7 @@ import os
 import socket
 from Common.packet_base.eve_packet import MessageType, Packet, PacketType
 from dotenv import load_dotenv
-from Common.Encryptor import Encryptor
+from Common.encryptor import Encryptor
 
 load_dotenv()
 key = os.getenv("KEY")

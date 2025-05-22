@@ -2,11 +2,11 @@ import json
 import socket
 
 from .evemap_base_socket import EveMapBaseSocket
-from Server.User import User
+from Server.user import User
 from Common.packet_base.eve_packet import MessageType, PacketType
-from Server.Event import Event
-from Server.EveMapDAL import EveMapDAL
-from Server.Mail import Mail
+from Server.event import Event
+from Server.eve_map_dal import EveMapDAL
+from Server.mail import Mail
 
 
 class EveMapConnSocket(EveMapBaseSocket):

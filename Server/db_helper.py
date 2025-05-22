@@ -1,19 +1,19 @@
 import os
 import sqlite3
 
-# Import from the refactored EveMapDAL.py
-from EveMapDAL import DATABASE_FILENAME, EveMapDAL  # Import the single DAL and the database filename
-# Assuming Event.py, User.py are in the same directory or accessible
-from Event import Event, Risk
-from User import User
+# Import from the refactored eve_map_dal.py
+from eve_map_dal import DATABASE_FILENAME, EveMapDAL  # Import the single DAL and the database filename
+# Assuming event.py, user.py are in the same directory or accessible
+from event import Event, Risk
+from user import User
 
 
 # Mock function for get_location_from_coordinates.
-# This is useful if the actual `location_from_coordinates.py` makes external API calls
+# This is useful if the actual `geo_utils.py` makes external API calls
 # and you want to avoid them during dummy data creation.
 # For EveMapDAL to use this specific mock when helper.py is run,
-# the 'location_from_coordinates.py' file itself should ideally contain this mock logic,
-# or advanced patching should be used. EveMapDAL.py imports it directly.
+# the 'geo_utils.py' file itself should ideally contain this mock logic,
+# or advanced patching should be used. eve_map_dal.py imports it directly.
 def get_location_from_coordinates(event: Event) -> tuple[str, str]:
     """
     Mock function to return plausible region/city based on coordinates.
@@ -274,13 +274,13 @@ def create_dummy_data_for_database():
 # --- Main execution block ---
 if __name__ == "__main__":
     # This block allows you to run this script directly to populate the database.
-    # Ensure Event.py, User.py, EveMapDAL.py, and a (potentially mock)
-    # location_from_coordinates.py are in the same directory or accessible.
+    # Ensure event.py, user.py, eve_map_dal.py, and a (potentially mock)
+    # geo_utils.py are in the same directory or accessible.
 
-    # If location_from_coordinates.py contains the real API call, and you want to use the mock
-    # for this script, you'd typically replace the content of location_from_coordinates.py
+    # If geo_utils.py contains the real API call, and you want to use the mock
+    # for this script, you'd typically replace the content of geo_utils.py
     # with the mock function temporarily, or use a more advanced patching technique.
-    # For simplicity, this script assumes EveMapDAL.py's import will resolve to either the
+    # For simplicity, this script assumes eve_map_dal.py's import will resolve to either the
     # real function or a mock version made available at the `location_from_coordinates` import path.
 
     create_dummy_data_for_database()

@@ -1,8 +1,8 @@
 from .evemap_base_socket import EveMapBaseSocket
 from Common.packet_base.eve_packet import MessageType, PacketType
 import json
-from Server.User import User
-from Server.Event import Event
+from Server.user import User
+from Server.event import Event
 
 
 class EveMapClientSocket(EveMapBaseSocket):

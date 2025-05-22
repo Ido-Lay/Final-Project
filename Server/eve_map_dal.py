@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from typing import Final, Optional
 
 import schedule
-from Server.Event import Event
-from Server.location_from_coordinates import GeoUtils
-from Server.User import User
+from Server.event import Event
+from Server.geo_utils import GeoUtils
+from Server.user import User
 
 DATABASE_FILENAME: Final[str] = 'evemap.db'
 
