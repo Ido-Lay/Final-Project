@@ -37,6 +37,10 @@ class Packet:
             + self.message
         )
 
+    def update_message(self, updated_message: bytes):
+        self.message = updated_message
+        self.data_length = len(updated_message)
+
     @staticmethod
     def get_data_length_field_size():
         return 4
