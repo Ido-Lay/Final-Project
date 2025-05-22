@@ -1,6 +1,4 @@
-import os
 import re
-import sqlite3  # Import for specific error handling
 import tkinter as tk
 from tkinter import font as tkFont
 from tkinter import messagebox, ttk
