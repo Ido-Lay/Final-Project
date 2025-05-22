@@ -1,10 +1,9 @@
 import json
 import socket
-from typing import Optional
 
 from .evemap_base_socket import EveMapBaseSocket
 from Server.User import User
-from .eve_packet import Packet, MessageType, PacketType
+from Common.packet_base.eve_packet import MessageType, PacketType
 from Server.Event import Event
 from Server.EveMapDAL import EveMapDAL
 from Server.Mail import Mail
