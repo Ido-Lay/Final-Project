@@ -1,13 +1,77 @@
 <!-- templates/base.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>{% block title %}Map App{% endblock %}</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            background-color: #4a90e2;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        nav span {
+            color: white;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .fullwidth {
+            margin: 0;
+            padding: 0;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+            color: #d9534f;
+            font-weight: bold;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        hr {
+            margin: 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+    {% block head %}{% endblock %}
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('map_with_markers') }}">Map View</a> |
-        <a href="{{ url_for('submit_event') }}">Submit Event</a> |
+        <a href="{{ url_for('map_with_markers') }}">Map View</a>
+        <a href="{{ url_for('submit_event') }}">Submit Event</a>
         {% if current_user.is_authenticated %}
             <span>Welcome, {{ current_user.name }}!</span>
             <a href="{{ url_for('logout') }}">Logout</a>
@@ -16,16 +80,18 @@
         {% endif %}
     </nav>
     <hr>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-                {% for msg in messages %}
-                    <li>{{ msg }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
+    <div class="{% block container_class %}container{% endblock %}">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul>
+                    {% for msg in messages %}
+                        <li>{{ msg }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
 
-    {% block content %}{% endblock %}
+        {% block content %}{% endblock %}
+    </div>
 </body>
 </html>

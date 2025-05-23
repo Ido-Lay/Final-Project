@@ -2,38 +2,98 @@
 
 {% block title %}Map View{% endblock %}
 
+{% block container_class %}fullwidth{% endblock %} {# makes the map go full width #}
+
 {% block content %}
-<h2>Event Map</h2>
+<style>
+    .map-header {
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin: 1rem 0;
+        color: #333;
+    }
 
-<form id="filterForm" style="margin-bottom: 1em;">
-    <label for="city">City:</label>
-    <select id="cityFilter" name="city">
-        <option value="">All</option>
-        {% for city in cities %}
-            <option value="{{ city }}">{{ city }}</option>
-        {% endfor %}
-    </select>
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+        padding: 0 1rem;
+    }
 
-    <label for="region">Region:</label>
-    <select id="regionFilter" name="region">
-        <option value="">All</option>
-        {% for region in regions %}
-            <option value="{{ region }}">{{ region }}</option>
-        {% endfor %}
-    </select>
+    .filter-form label {
+        font-weight: 500;
+        margin-right: 0.5rem;
+    }
 
-    <label for="risk">Risk:</label>
-    <select id="riskFilter" name="risk">
-        <option value="">All</option>
-        <option value="0">DANGER</option>
-        <option value="1">GOOD</option>
-        <option value="2">NATURAL</option>
-    </select>
+    .filter-form select {
+        padding: 0.4rem 0.6rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
 
-    <button type="button" id="applyFilters">Apply Filters</button>
+    #applyFilters {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    #applyFilters:hover {
+        background-color: #357ab8;
+    }
+
+    #map {
+        height: 80vh;
+        width: 100%;
+    }
+</style>
+
+<h2 class="map-header">Event Map</h2>
+
+<form id="filterForm" class="filter-form">
+    <div>
+        <label for="city">City:</label>
+        <select id="cityFilter" name="city">
+            <option value="">All</option>
+            {% for city in cities %}
+                <option value="{{ city }}">{{ city }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="region">Region:</label>
+        <select id="regionFilter" name="region">
+            <option value="">All</option>
+            {% for region in regions %}
+                <option value="{{ region }}">{{ region }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="risk">Risk:</label>
+        <select id="riskFilter" name="risk">
+            <option value="">All</option>
+            <option value="0">DANGER</option>
+            <option value="1">GOOD</option>
+            <option value="2">NATURAL</option>
+        </select>
+    </div>
+
+    <div>
+        <button type="button" id="applyFilters">Apply Filters</button>
+    </div>
 </form>
 
-<div id="map" style="height: 80vh; width: 100%;"></div>
+<div id="map"></div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

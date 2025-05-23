@@ -1,15 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Email Already Exists</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f2f4f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .error-box {
+            background-color: white;
+            padding: 2rem 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .error-box h2 {
+            color: #d9534f;
+            margin-bottom: 1rem;
+        }
+
+        .error-box p {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .error-box strong {
+            color: #222;
+        }
+
+        .error-box a {
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .error-box a:hover {
+            text-decoration: underline;
+        }
+
+        .error-box button {
+            margin-top: 1rem;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .error-box button:hover {
+            background-color: #357ab8;
+        }
+    </style>
 </head>
 <body>
-    <h2>Signup Error</h2>
-    <p>The email <strong>{{ email }}</strong> is already registered.</p>
-    <p>Please <a href="{{ url_for('login') }}">log in here</a> instead.</p>
+    <div class="error-box">
+        <h2>Signup Error</h2>
+        <p>The email <strong>{{ email }}</strong> is already registered.</p>
+        <p>Please <a href="{{ url_for('login') }}">log in here</a> instead.</p>
 
-    <form action="{{ url_for('signup') }}" method="get">
-        <button type="submit">Back to Sign Up</button>
-    </form>
+        <form action="{{ url_for('signup') }}" method="get">
+            <button type="submit">Back to Sign Up</button>
+        </form>
+    </div>
 </body>
 </html>

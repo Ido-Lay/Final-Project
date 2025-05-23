@@ -1,66 +1,158 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <title>Submit an Event</title>
-    <style>
-        #map {
-            width: 100%;
-            height: 80vh;
-        }
-        .filters {
-            margin-bottom: 10px;
-        }
-        select {
-            margin-right: 10px;
-            padding: 5px;
-        }
-        .leaflet-popup-content {
-            width: 200px !important;
-        }
-    </style>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fb;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            background-color: #4a90e2;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+
+        nav span {
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .filters {
+            background-color: #ffffff;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filters label {
+            margin-right: 0.5rem;
+            font-weight: 500;
+        }
+
+        .filters select {
+            padding: 0.5rem;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .filters button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background-color: #4a90e2;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .filters button:hover {
+            background-color: #357ab8;
+        }
+
+        #map {
+            width: 100%;
+            height: 75vh;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .leaflet-popup-content {
+            width: 220px !important;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+
+        button[type="submit"] {
+            margin-top: 10px;
+            width: 100%;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #357ab8;
+        }
+    </style>
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('map_with_markers') }}">Map View</a> |
-        {% if current_user.is_authenticated %}
-            <span>Welcome, {{ current_user.name }}!</span>
-            <a href="{{ url_for('logout') }}">Logout</a>
-        {% else %}
-            <a href="{{ url_for('login') }}">Login</a>
-        {% endif %}
+        <div>
+            <a href="{{ url_for('map_with_markers') }}">Map View</a>
+        </div>
+        <div>
+            {% if current_user.is_authenticated %}
+                <span>Welcome, {{ current_user.name }}!</span>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+            {% endif %}
+        </div>
     </nav>
-    <h2>Submit an Event</h2>
-    <p>Click anywhere on the map to report an event</p>
 
-    <div class="filters">
-        <label for="cityFilter">City:</label>
-        <select id="cityFilter">
-            <option value="">All</option>
-        </select>
+    <div class="container">
+        <h2>Submit an Event</h2>
+        <p>Click anywhere on the map to report an event.</p>
 
-        <label for="regionFilter">Region:</label>
-        <select id="regionFilter">
-            <option value="">All</option>
-        </select>
+        <div class="filters">
+            <label for="cityFilter">City:</label>
+            <select id="cityFilter"><option value="">All</option></select>
 
-        <label for="riskFilter">Risk:</label>
-        <select id="riskFilter">
-            <option value="">All</option>
-            <option value="0">DANGER</option>
-            <option value="1">GOOD</option>
-            <option value="2">NATURAL</option>
-        </select>
+            <label for="regionFilter">Region:</label>
+            <select id="regionFilter"><option value="">All</option></select>
 
-        <button onclick="loadAllMarkers()">Apply Filters</button>
+            <label for="riskFilter">Risk:</label>
+            <select id="riskFilter">
+                <option value="">All</option>
+                <option value="0">DANGER</option>
+                <option value="1">GOOD</option>
+                <option value="2">NATURAL</option>
+            </select>
+
+            <button onclick="loadAllMarkers()">Apply Filters</button>
+        </div>
+
+        <div id="map"></div>
     </div>
 
-    <div id="map"></div>
-
     <script>
-        let map = L.map('map').setView([32.0, 35.0], 6);
+        const map = L.map('map').setView([32.0, 35.0], 6);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -69,7 +161,6 @@
 
         const markerGroup = L.layerGroup().addTo(map);
 
-        // Auto-center on user
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
                 map.setView([pos.coords.latitude, pos.coords.longitude], 13);
@@ -82,18 +173,12 @@
 
             const citySelect = document.getElementById("cityFilter");
             data.cities.forEach(city => {
-                const option = document.createElement("option");
-                option.value = city;
-                option.text = city;
-                citySelect.appendChild(option);
+                citySelect.innerHTML += `<option value="${city}">${city}</option>`;
             });
 
             const regionSelect = document.getElementById("regionFilter");
             data.regions.forEach(region => {
-                const option = document.createElement("option");
-                option.value = region;
-                option.text = region;
-                regionSelect.appendChild(option);
+                regionSelect.innerHTML += `<option value="${region}">${region}</option>`;
             });
         }
 
@@ -132,10 +217,9 @@
         }
 
         map.on('click', function(e) {
-            let lat = e.latlng.lat;
-            let lng = e.latlng.lng;
+            const { lat, lng } = e.latlng;
 
-            let popupContent = `
+            const popupContent = `
                 <form id="eventForm">
                     <label>Event Name:</label><br>
                     <input type="text" id="eventName" required><br>
@@ -144,27 +228,22 @@
                         <option value="0">DANGER</option>
                         <option value="1">GOOD</option>
                         <option value="2">NATURAL</option>
-                    </select><br><br>
+                    </select><br>
                     <button type="submit">Submit</button>
                 </form>
             `;
 
-            L.popup()
-                .setLatLng([lat, lng])
-                .setContent(popupContent)
-                .openOn(map);
+            L.popup().setLatLng([lat, lng]).setContent(popupContent).openOn(map);
 
             setTimeout(() => {
                 document.getElementById("eventForm").addEventListener("submit", function(event) {
                     event.preventDefault();
-                    let name = document.getElementById("eventName").value;
-                    let risk = parseInt(document.getElementById("riskLevel").value);
+                    const name = document.getElementById("eventName").value;
+                    const risk = parseInt(document.getElementById("riskLevel").value);
 
                     fetch('/api/get_marker', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             identity: 0,
                             event_name: name,
@@ -175,11 +254,11 @@
                             city: "Unknown"
                         })
                     }).then(res => res.text())
-                      .then(data => {
+                      .then(() => {
                           alert("Event submitted!");
                           map.closePopup();
-                          loadAllMarkers();  // Refresh markers
-                      }).catch(err => alert("Error submitting event: " + err));
+                          loadAllMarkers();
+                      }).catch(err => alert("Error: " + err));
                 });
             }, 100);
         });
