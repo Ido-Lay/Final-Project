@@ -142,7 +142,6 @@ class AdminPanel:
             return None
 
     def _get_selected_user(self):
-        # (This helper method remains the same)
         selected_user_str = self.user_var.get()
         if not selected_user_str or "No users" in selected_user_str or "Select a user" in selected_user_str:
             return None
