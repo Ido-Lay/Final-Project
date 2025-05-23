@@ -1,5 +1,7 @@
 import os
 import socket
+from typing import Optional
+
 from Common.packet_base.eve_packet import MessageType, Packet, PacketType
 from dotenv import load_dotenv
 from Common.encryptor import Encryptor
@@ -25,8 +27,12 @@ class EveMapBaseSocket:
         packet.update_message(self.encryptor.encrypt(packet.message))
         self.tcp_socket.send(packet.to_bytes())
 
-    def recv_command(self) -> tuple[bytes, MessageType, PacketType]:
-        data_length = int.from_bytes(self.tcp_socket.recv(Packet.get_data_length_field_size()))
+    def recv_command(self) -> Optional[tuple[bytes, MessageType, PacketType]]:
+        raw_data_length = self.tcp_socket.recv(Packet.get_data_length_field_size())
+        if raw_data_length == b'':
+            return None
+
+        data_length = int.from_bytes(raw_data_length)
         packet_type = PacketType(int.from_bytes(self.tcp_socket.recv(Packet.get_packet_type_field_size())))
         message_type = MessageType(int.from_bytes(self.tcp_socket.recv(Packet.get_message_type_field_size())))
         encrypted_message = self.tcp_socket.recv(data_length)

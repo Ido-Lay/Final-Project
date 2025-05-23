@@ -23,7 +23,12 @@ def start_server_socket_loop():
 
 def handle_client(conn_socket: EveMapConnSocket):
     while True:
-        message, message_type, packet_type = conn_socket.recv_command()
+        message_data = conn_socket.recv_command()
+        if not message_data:
+            conn_socket.close()
+            break
+
+        message, message_type, packet_type = message_data
 
         if message_type == MessageType.FETCH_USERS and packet_type == PacketType.REQUEST:
             conn_socket.handle_user_command(EveMapDAL.get_all_users())

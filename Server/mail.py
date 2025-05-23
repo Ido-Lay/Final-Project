@@ -6,6 +6,7 @@ import sqlite3
 from Server.user import User
 from dotenv import load_dotenv
 from Server.event import Event
+from Server.event import Risk
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email
@@ -190,6 +191,8 @@ class Mail:
 
                                         try:
                                             print(f"  - Inserting confirmed event {event_id} into main database...")
+                                            confirmed_event.print_event()
+                                            confirmed_event.risk = Risk(confirmed_event.risk)
                                             EveMapDAL.insert_event(confirmed_event)
                                             print(f"  - Successfully inserted event ID {event_id}.")
                                             insert_success.append(f"Event {event_display}")
