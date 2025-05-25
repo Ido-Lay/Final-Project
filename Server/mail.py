@@ -82,31 +82,33 @@ class Mail:
 
     @staticmethod
     def check_email(current_event_map: list[Event]):
+        # Load email configuration values
         sender_email_config = SENDER_EMAIL
         sender_password_config = SENDER_PASSWORD
         imap_server_config = IMAP_SERVER
         print("Checking for confirmation emails...")
 
+        # Check if email password is configured
         if not sender_password_config:
             error_message = "Configuration Error: Email password not configured."
             print(error_message)
             return f"Confirmation Check Complete:\n\n**Processing Errors:**\n- {error_message}"
 
-        confirmations_processed = []
-        denials_processed = []
-        insert_success = []
-        insert_failures = []
-        errors = []
-        processed_email_ids = set()  # Keep track of emails processed in this run
-
-        # Use the mock DAL classes by default
+        # Prepare lists to track processing results
+        confirmations_processed = []  # Emails confirming the event
+        denials_processed = []  # Emails denying the event
+        insert_success = []  # Confirmed events added to main DB
+        insert_failures = []  # Confirmed events failed to insert
+        errors = []  # General processing errors
+        processed_email_ids = set()  # Email IDs that were already handled
 
         try:
+            # Connect to IMAP server and select inbox
             mail = imaplib.IMAP4_SSL(imap_server_config)
             mail.login(sender_email_config, sender_password_config)
             mail.select("inbox")
 
-            # Search for unread emails matching the subject pattern
+            # Define search criteria for relevant unread emails
             search_criteria = f'(UNSEEN SUBJECT "Action Needed: Confirm Event" SUBJECT "(Event ID:")'
             status, messages = mail.search(None, search_criteria)
 
@@ -116,9 +118,12 @@ class Mail:
 
                 for email_id_bytes in email_ids:
                     email_id_str = email_id_bytes.decode()
+
+                    # Skip emails already processed
                     if email_id_str in processed_email_ids:
                         continue
 
+                    # Fetch email content
                     status, msg_data = mail.fetch(email_id_bytes, "(RFC822)")
 
                     if status == 'OK':
@@ -127,7 +132,9 @@ class Mail:
                                 msg = email.message_from_bytes(response_part[1])
                                 subject = ""
                                 sender_email_addr = ""
+
                                 try:
+                                    # Decode email subject
                                     subj_hdr = email.header.decode_header(msg["Subject"])[0]
                                     subject = (
                                         subj_hdr[0].decode(subj_hdr[1] or 'utf-8')
@@ -135,6 +142,7 @@ class Mail:
                                         else subj_hdr[0]
                                     )
 
+                                    # Extract sender address
                                     from_hdr = email.header.decode_header(msg.get("From"))[0]
                                     from_address = (
                                         from_hdr[0].decode(from_hdr[1] or 'utf-8')
@@ -150,29 +158,31 @@ class Mail:
                                         f"Processing email ID {email_id_str} from: {sender_email_addr}, Subject: {subject}"
                                     )
 
+                                    # Extract event ID from subject
                                     event_id_match = re.search(r'\(Event ID: (\d+)\)', subject)
                                     if not event_id_match:
                                         print(f"  - Skipping: Could not find Event ID in subject.")
                                         continue
 
                                     event_id = int(event_id_match.group(1))
-                                    confirmed_event = next((event for event in current_event_map if event.identity == event_id), None)
 
+                                    # Find matching event in local map
+                                    confirmed_event = next(
+                                        (event for event in current_event_map if event.identity == event_id), None)
                                     if confirmed_event is None:
                                         print(f"  - Skipping: Event ID {event_id} not found in local event map.")
                                         errors.append(
                                             f"Event ID {event_id} from email subject not in provided event_map.")
-                                        mail.store(email_id_bytes, '+FLAGS',
-                                                   '\\Seen')  # Mark as seen to avoid re-processing
+                                        mail.store(email_id_bytes, '+FLAGS', '\\Seen')
                                         processed_email_ids.add(email_id_str)
                                         continue
 
+                                    # Extract body content
                                     body = ""
                                     if msg.is_multipart():
                                         for part in msg.walk():
                                             if part.get_content_type() == "text/plain" and "attachment" not in str(
-                                                    part.get("Content-Disposition")
-                                            ):
+                                                    part.get("Content-Disposition")):
                                                 payload = part.get_payload(decode=True)
                                                 charset = part.get_content_charset() or 'utf-8'
                                                 body = payload.decode(charset, errors='ignore')
@@ -182,10 +192,12 @@ class Mail:
                                         charset = msg.get_content_charset() or 'utf-8'
                                         body = payload.decode(charset, errors='ignore')
 
+                                    # Normalize body for analysis
                                     body_lower = body.lower()
                                     event_display = f"'{confirmed_event.event_name}' (ID: {event_id})"
 
-                                    if ("confirm" in body_lower) or ("Confirm" in body_lower):
+                                    # Case: confirmation email
+                                    if "confirm" in body_lower:
                                         print(f"  - CONFIRMED: Event {event_display} by {sender_email_addr}")
                                         confirmations_processed.append(f"Event {event_display} by {sender_email_addr}")
 
@@ -198,14 +210,16 @@ class Mail:
                                             insert_success.append(f"Event {event_display}")
                                             mail.store(email_id_bytes, '+FLAGS', '\\Seen')
                                             processed_email_ids.add(email_id_str)
+
+                                            # Attempt to delete event from admin table
                                             try:
                                                 EveMapDAL.delete_event(event_id)
-                                                print(f"  - Deleted event ID {event_id} from admin DB.")
+                                                print(f"  - Deleted event ID {event_id} from DB.")
                                             except Exception as del_e:
-                                                error_msg = f"Failed to delete event ID {event_id} from admin DB: {del_e}"
+                                                error_msg = f"Failed to delete event ID {event_id} from DB: {del_e}"
                                                 print(f"  - {error_msg}")
-                                                errors.append(
-                                                    error_msg)  # Still considered a success for main insertion
+                                                errors.append(error_msg)
+
                                         except sqlite3.IntegrityError as ie:
                                             err_msg = f"Event {event_display} (Already exists or constraint violation: {ie})"
                                             print(
@@ -217,9 +231,9 @@ class Mail:
                                             err_msg = f"Event {event_display} (DB Error: {db_e})"
                                             print(f"  - FAILED to insert event ID {event_id} into main DB: {db_e}")
                                             insert_failures.append(err_msg)
-                                            # Do not mark as read if DB insertion failed unexpectedly
 
-                                    elif "deny" in body_lower or "denied" in body_lower or "Denied" in body_lower or "Deny" in body_lower:
+                                    # Case: denial email
+                                    elif any(term in body_lower for term in ["deny", "denied"]):
                                         print(f"  - DENIED: Event {event_display} by {sender_email_addr}")
                                         denials_processed.append(f"Event {event_display} by {sender_email_addr}")
                                         try:
@@ -231,24 +245,23 @@ class Mail:
                                             errors.append(error_msg)
                                         mail.store(email_id_bytes, '+FLAGS', '\\Seen')
                                         processed_email_ids.add(email_id_str)
+
+                                    # Case: unknown content
                                     else:
                                         print(
-                                            f"  - No clear confirm/deny keyword found for Event ID {event_id}. Marking as read."
-                                        )
+                                            f"  - No clear confirm/deny keyword found for Event ID {event_id}. Marking as read.")
                                         mail.store(email_id_bytes, '+FLAGS', '\\Seen')
                                         processed_email_ids.add(email_id_str)
 
                                 except Exception as parse_e:
                                     print(f"  - Error parsing email ID {email_id_str}: {parse_e}")
                                     errors.append(f"Parsing error for email ID {email_id_str}: {parse_e}")
-                                    # Attempt to mark as seen to avoid loop on badly formatted email
                                     try:
                                         mail.store(email_id_bytes, '+FLAGS', '\\Seen')
                                         processed_email_ids.add(email_id_str)
                                     except Exception as mark_seen_err:
                                         errors.append(
                                             f"Could not mark email {email_id_str} as seen after parse error: {mark_seen_err}")
-
 
             else:
                 print(f"Failed to search emails: {messages}")
@@ -263,59 +276,60 @@ class Mail:
             print(f"An unexpected error occurred during email check: {e}")
             errors.append(f"Unexpected error during email check: {e}")
 
-        # --- Construct Comprehensive Results ---
+        # -------------------------------
+        # Build result summary message
+        # -------------------------------
         result_message = "Confirmation Check Complete:\n\n"
+
         if insert_success:
-            result_message += (
-                    "**Successfully Confirmed & Added to DB:**\n" + "\n".join(f"- {s}" for s in insert_success) + "\n\n"
-            )
+            result_message += "**Successfully Confirmed & Added to DB:**\n" + "\n".join(
+                f"- {s}" for s in insert_success) + "\n\n"
+
         if denials_processed:
             result_message += "**Denied (Not Added, Removed from Admin):**\n" + "\n".join(
                 f"- {d}" for d in denials_processed) + "\n\n"
-        if insert_failures:
-            result_message += (
-                    "**Confirmation Found (DB Insertion Issues):**\n" + "\n".join(
-                f"- {f}" for f in insert_failures) + "\n\n"
-            )
 
-        # Report confirmations found but not processed due to prior DB errors for that specific event
-        # This filters confirmations_processed to find items not reflected in insert_success or insert_failures
+        if insert_failures:
+            result_message += "**Confirmation Found (DB Insertion Issues):**\n" + "\n".join(
+                f"- {f}" for f in insert_failures) + "\n\n"
+
+        # Identify confirmed emails not reflected in success/failure
         confirmed_but_not_processed_explicitly = [
             c for c in confirmations_processed
             if not any(s_msg in c for s_msg in insert_success + insert_failures)
-            # check if core event part of c is in success/failure
         ]
         if confirmed_but_not_processed_explicitly:
-            result_message += (
-                    "**Confirmations Found (Outcome not in DB success/failure lists, check logs/errors):**\n"
-                    + "\n".join(f"- {uc}" for uc in confirmed_but_not_processed_explicitly)
-                    + "\n\n"
-            )
+            result_message += "**Confirmations Found (Outcome not in DB success/failure lists, check logs/errors):**\n"
+            result_message += "\n".join(f"- {uc}" for uc in confirmed_but_not_processed_explicitly) + "\n\n"
 
+        # Report if nothing meaningful was processed
         if (
-                not insert_success
-                and not denials_processed
-                and not insert_failures
-                and not confirmed_but_not_processed_explicitly  # Check this new list too
-                and not errors  # Only show "no new" if there were no errors during processing either
+                not insert_success and
+                not denials_processed and
+                not insert_failures and
+                not confirmed_but_not_processed_explicitly and
+                not errors
         ):
-            if not email_ids and status == 'OK':  # Check if email_ids was empty from the start and search was OK
+            if not email_ids and status == 'OK':
                 result_message += "No new relevant confirmation/denial emails found.\n\n"
-            elif not email_ids and status != 'OK':  # If search failed, errors list will cover it
-                pass  # Error already reported
             elif not (
-                    insert_success or denials_processed or insert_failures or confirmed_but_not_processed_explicitly) and email_ids:
+                    insert_success or denials_processed or insert_failures or confirmed_but_not_processed_explicitly
+            ) and email_ids:
                 result_message += "Processed emails, but none resulted in successful additions, denials, or known DB failures. Check logs if emails were present.\n\n"
 
+        # Append any errors encountered
         if errors:
             result_message += "**Processing Errors Encountered:**\n" + "\n".join(f"- {err}" for err in errors)
 
+        # Fallback if message ends abruptly
         if not result_message.strip().endswith("\n\n") and result_message.strip() != "Confirmation Check Complete:":
             result_message += "\n"
-        if result_message.strip() == "Confirmation Check Complete:":  # If nothing got added
+        if result_message.strip() == "Confirmation Check Complete:":
             result_message = "Confirmation Check Complete:\n\nNo new relevant confirmation/denial emails found or no actions taken.\n"
 
+        # Print final result
         print("\n--- Result Message ---")
         print(result_message)
         print("--- End of Result Message ---")
         return result_message
+

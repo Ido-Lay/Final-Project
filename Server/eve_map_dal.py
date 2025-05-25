@@ -300,17 +300,18 @@ class EveMapDAL:
     def distance_between_events(event1: Event, event2: Event) -> float:
         earth_radius = 6_371_000
 
-        lat1 = event1.latitude
-        long1 = event1.longitude
-        lat2 = event2.latitude
-        long2 = event2.longitude
+        lat1 = event1.latitude # Lateral coordinate of the first event.
+        long1 = event1.longitude # Horizontal coordinate of the first event.
+        lat2 = event2.latitude # Lateral coordinate of the second event.
+        long2 = event2.longitude # Horizontal coordinate of the second event.
 
+        # Convert all coordinates from degrees to radians
         lat1_rad = math.radians(lat1)
         lon1_rad = math.radians(long1)
         lat2_rad = math.radians(lat2)
         lon2_rad = math.radians(long2)
 
-        # Differences
+        # Compute the differences in coordinates
         delta_lat = lat2_rad - lat1_rad
         delta_lon = lon2_rad - lon1_rad
 
@@ -321,17 +322,21 @@ class EveMapDAL:
 
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
+        # Final distance in meters
         distance = earth_radius * c
 
-        return distance
+        return distance #Returns the distance between the two events.
 
     @staticmethod
     def similar_event_from_table(event_to_check: Event, table_name: str) -> bool:
+        # Connect to the database
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
 
+        # SQL query to fetch all relevant event data from the specified table
         query = f"SELECT id, event_name, latitude, longitude, risk, city, region FROM {table_name} WHERE 1=1"
 
+        # Attempt to execute the query and fetch results
         try:
             cursor.execute(query)
             rows = cursor.fetchall()
@@ -339,8 +344,9 @@ class EveMapDAL:
             print(f"Error fetching events: {e}")
             rows = []  # Return empty list on error
         finally:
-            conn.close()
+            conn.close() # Always close the connection
 
+        # Parse the fetched rows into Event objects
         events = []
         for row in rows:
             try:
@@ -357,6 +363,7 @@ class EveMapDAL:
             except Exception as e:
                 print(f"Error processing row {row}: {e}")  # Catch errors during Event object creation
 
+        # Check for duplicate or similar event
         for event in events:
             if event == event_to_check:
                 return True
@@ -365,4 +372,5 @@ class EveMapDAL:
                     EveMapDAL.distance_between_events(event, event_to_check) < 100):
                 return True
 
+        # No similar event found
         return False
