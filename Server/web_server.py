@@ -69,7 +69,7 @@ app.secret_key = secrets.token_hex(32)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return EveMapDAL.get_user_by_email(user_id)  # Should return a User object or None
+    return EveMapDAL.get_user_by_email(user_id)
 
 
 @app.route("/login", methods=["GET", "POST"])

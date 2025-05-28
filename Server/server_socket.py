@@ -1,4 +1,3 @@
-import socket
 import threading
 from Common.EveMapSocket import EveMapServerSocket, EveMapConnSocket
 from Common.packet_base.eve_packet import MessageType, PacketType

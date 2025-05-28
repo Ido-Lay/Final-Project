@@ -78,7 +78,6 @@ class EveMapDAL:
         if (event.region, event.city) == ("Unknown", "Unknown"):
             print(f"Warning: Could not fetch location info for event {event.event_name}")
 
-        # Debugging: Print the data before insertion
         print(
             f"Inserting event: "
             f"{event.event_name}, {event.longitude}, {event.latitude}, {event.risk}, {region}, {city}"
